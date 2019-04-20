@@ -28,10 +28,7 @@ mod fid {
 
     pub fn builder_from_length_benchmark(_: &mut Criterion) {
         super::c().bench_function_over_inputs(
-            &format!(
-                "[{}] FidBuilder::from_length(N).build()",
-                super::git_hash()
-            ),
+            &format!("[{}] FidBuilder::from_length(N).build()", super::git_hash()),
             |b, &&n| b.iter(|| FidBuilder::from_length(n).build()),
             &NS,
         );
@@ -61,11 +58,7 @@ mod fid {
         let times = 1_000_000;
 
         super::c().bench_function_over_inputs(
-            &format!(
-                "[{}] Fid::rank(N) {} times",
-                super::git_hash(),
-                times
-            ),
+            &format!("[{}] Fid::rank(N) {} times", super::git_hash(), times),
             move |b, &&n| {
                 b.iter_batched(
                     || FidBuilder::from_length(n).build(),
@@ -87,11 +80,7 @@ mod fid {
         let times = 1_000;
 
         super::c().bench_function_over_inputs(
-            &format!(
-                "[{}] Fid::select(N) {} times",
-                super::git_hash(),
-                times
-            ),
+            &format!("[{}] Fid::select(N) {} times", super::git_hash(), times),
             move |b, &&n| {
                 b.iter_batched(
                     || {
@@ -119,11 +108,7 @@ mod fid {
         let times = 1_000_000;
 
         super::c().bench_function_over_inputs(
-            &format!(
-                "[{}] Fid::rank0(N) {} times",
-                super::git_hash(),
-                times
-            ),
+            &format!("[{}] Fid::rank0(N) {} times", super::git_hash(), times),
             move |b, &&n| {
                 b.iter_batched(
                     || FidBuilder::from_length(n).build(),
@@ -145,11 +130,7 @@ mod fid {
         let times = 1_000;
 
         super::c().bench_function_over_inputs(
-            &format!(
-                "[{}] Fid::select0(N) {} times",
-                super::git_hash(),
-                times
-            ),
+            &format!("[{}] Fid::select0(N) {} times", super::git_hash(), times),
             move |b, &&n| {
                 b.iter_batched(
                     || FidBuilder::from_length(n).build(),
@@ -168,177 +149,6 @@ mod fid {
     }
 }
 
-mod louds {
-    use criterion::{BatchSize, Criterion};
-    use fid_rs::{BitString, LoudsBuilder, LoudsIndex, LoudsNodeNum};
-
-    const NS: [u64; 5] = [1 << 11, 1 << 12, 1 << 13, 1 << 14, 1 << 15];
-
-    fn generate_binary_tree_lbs(n_nodes: u64) -> BitString {
-        assert!(
-            NS.iter().any(|n| n - 1 == n_nodes),
-            "Only 2^m - 1 nodes (complete binary tree) is supported"
-        );
-
-        let mut s = String::from("10");
-
-        // Nodes
-        for _ in 1..=(n_nodes / 2) {
-            s = format!("{}{}", s, "110");
-        }
-
-        // Leaves
-        for _ in (n_nodes / 2 + 1)..=(n_nodes) {
-            s = format!("{}{}", s, "0");
-        }
-
-        BitString::new(&s)
-    }
-
-    pub fn builder_from_bit_string_benchmark(_: &mut Criterion) {
-        let times = 10;
-
-        super::c().bench_function_over_inputs(
-            &format!(
-                "[{}] LoudsBuilder::from_bit_string(\"...(bin tree of N nodes)\").build() {} times",
-                super::git_hash(),
-                times,
-            ),
-            move |b, &&n| {
-                b.iter_batched(
-                    || {
-                        let bs = generate_binary_tree_lbs(n - 1);
-                        LoudsBuilder::from_bit_string(bs)
-                    },
-                    |builder| {
-                        for _ in 0..times {
-                            builder.build();
-                        }
-                    },
-                    BatchSize::SmallInput,
-                )
-            },
-            &NS,
-        );
-    }
-
-    pub fn node_num_to_index_benchmark(_: &mut Criterion) {
-        let times = 10_000;
-
-        super::c().bench_function_over_inputs(
-            &format!(
-                "[{}] Louds(N)::node_num_to_index() {} times",
-                super::git_hash(),
-                times,
-            ),
-            move |b, &&n| {
-                b.iter_batched(
-                    || {
-                        let bs = generate_binary_tree_lbs(n - 1);
-                        LoudsBuilder::from_bit_string(bs).build()
-                    },
-                    |louds| {
-                        // iter_batched() does not properly time `routine` time when `setup` time is far longer than `routine` time.
-                        // Tested function takes too short compared to build(). So loop many times.
-                        for _ in 0..times {
-                            let _ = louds.node_num_to_index(&LoudsNodeNum::new(n - 1));
-                        }
-                    },
-                    BatchSize::SmallInput,
-                )
-            },
-            &NS,
-        );
-    }
-
-    pub fn index_to_node_num_benchmark(_: &mut Criterion) {
-        let times = 10_000;
-
-        super::c().bench_function_over_inputs(
-            &format!(
-                "[{}] Louds(N)::index_to_node_num() {} times",
-                super::git_hash(),
-                times,
-            ),
-            move |b, &&n| {
-                b.iter_batched(
-                    || {
-                        let bs = generate_binary_tree_lbs(n - 1);
-                        LoudsBuilder::from_bit_string(bs).build()
-                    },
-                    |louds| {
-                        // iter_batched() does not properly time `routine` time when `setup` time is far longer than `routine` time.
-                        // Tested function takes too short compared to build(). So loop many times.
-                        for _ in 0..times {
-                            let _ = louds.index_to_node_num(&LoudsIndex::new(n / 2 + 1));
-                        }
-                    },
-                    BatchSize::SmallInput,
-                )
-            },
-            &NS,
-        );
-    }
-
-    pub fn parent_to_children_benchmark(_: &mut Criterion) {
-        let times = 10_000;
-
-        super::c().bench_function_over_inputs(
-            &format!(
-                "[{}] Louds(N)::parent_to_children() {} times",
-                super::git_hash(),
-                times,
-            ),
-            move |b, &&n| {
-                b.iter_batched(
-                    || {
-                        let bs = generate_binary_tree_lbs(n - 1);
-                        LoudsBuilder::from_bit_string(bs).build()
-                    },
-                    |louds| {
-                        // iter_batched() does not properly time `routine` time when `setup` time is far longer than `routine` time.
-                        // Tested function takes too short compared to build(). So loop many times.
-                        for _ in 0..times {
-                            let _ = louds.parent_to_children(&LoudsNodeNum::new(n - 1));
-                        }
-                    },
-                    BatchSize::SmallInput,
-                )
-            },
-            &NS,
-        );
-    }
-
-    pub fn child_to_parent_benchmark(_: &mut Criterion) {
-        let times = 10_000;
-
-        super::c().bench_function_over_inputs(
-            &format!(
-                "[{}] Louds(N)::child_to_parent() {} times",
-                super::git_hash(),
-                times,
-            ),
-            move |b, &&n| {
-                b.iter_batched(
-                    || {
-                        let bs = generate_binary_tree_lbs(n - 1);
-                        LoudsBuilder::from_bit_string(bs).build()
-                    },
-                    |louds| {
-                        // iter_batched() does not properly time `routine` time when `setup` time is far longer than `routine` time.
-                        // Tested function takes too short compared to build(). So loop many times.
-                        for _ in 0..times {
-                            let _ = louds.child_to_parent(&LoudsIndex::new(n / 2 + 1));
-                        }
-                    },
-                    BatchSize::SmallInput,
-                )
-            },
-            &NS,
-        );
-    }
-}
-
 criterion_group!(
     benches,
     fid::builder_from_length_benchmark,
@@ -347,10 +157,5 @@ criterion_group!(
     fid::select_benchmark,
     fid::rank0_benchmark,
     fid::select0_benchmark,
-    louds::builder_from_bit_string_benchmark,
-    louds::node_num_to_index_benchmark,
-    louds::index_to_node_num_benchmark,
-    louds::parent_to_children_benchmark,
-    louds::child_to_parent_benchmark,
 );
 criterion_main!(benches);
