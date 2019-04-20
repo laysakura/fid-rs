@@ -1,23 +1,23 @@
 use super::{
-    BitString, Blocks, Chunks, SuccinctBitVector, SuccinctBitVectorBuilder, SuccinctBitVectorSeed,
+    BitString, Blocks, Chunks, Fid, FidBuilder, FidSeed,
 };
 use crate::internal_data_structure::popcount_table::PopcountTable;
 use crate::internal_data_structure::raw_bit_vector::RawBitVector;
 use std::collections::HashSet;
 
-impl super::SuccinctBitVectorBuilder {
+impl super::FidBuilder {
     /// Prepares a bit vector of `length`, fulfilled with 0.
     pub fn from_length(length: u64) -> Self {
         Self {
-            seed: SuccinctBitVectorSeed::Length(length),
+            seed: FidSeed::Length(length),
             bits_set: HashSet::new(),
         }
     }
 
     /// Prepares a bit vector from [BitString](struct.BitString.html) representation.
-    pub fn from_bit_string(bs: BitString) -> SuccinctBitVectorBuilder {
-        SuccinctBitVectorBuilder {
-            seed: SuccinctBitVectorSeed::BitStr(bs),
+    pub fn from_bit_string(bs: BitString) -> FidBuilder {
+        FidBuilder {
+            seed: FidSeed::BitStr(bs),
             bits_set: HashSet::new(),
         }
     }
@@ -47,24 +47,24 @@ impl super::SuccinctBitVectorBuilder {
             self.bits_set.insert(length);
         }
         self.seed = match &self.seed {
-            SuccinctBitVectorSeed::Length(n) => SuccinctBitVectorSeed::Length(n + 1),
-            SuccinctBitVectorSeed::BitStr(bs) => {
-                SuccinctBitVectorSeed::BitStr(BitString::new(&format!("{}0", bs.str())))
+            FidSeed::Length(n) => FidSeed::Length(n + 1),
+            FidSeed::BitStr(bs) => {
+                FidSeed::BitStr(BitString::new(&format!("{}0", bs.str())))
             }
         };
         self
     }
 
-    /// Build [SuccinctBitVector](struct.SuccinctBitVector.html) in _O(N)_ time (where _N_ is the length of the bit vector to build).
+    /// Build [Fid](struct.Fid.html) in _O(N)_ time (where _N_ is the length of the bit vector to build).
     ///
     /// # Panics
     /// When _`length` == 0_.
-    pub fn build(&self) -> SuccinctBitVector {
+    pub fn build(&self) -> Fid {
         assert_ne!(self.current_length(), 0, "length must be > 0.");
 
         let mut rbv = match &self.seed {
-            SuccinctBitVectorSeed::Length(n) => RawBitVector::from_length(*n),
-            SuccinctBitVectorSeed::BitStr(bs) => RawBitVector::from_bit_string(bs),
+            FidSeed::Length(n) => RawBitVector::from_length(*n),
+            FidSeed::BitStr(bs) => RawBitVector::from_bit_string(bs),
         };
         for bit in &self.bits_set {
             rbv.set_bit(*bit)
@@ -72,20 +72,20 @@ impl super::SuccinctBitVectorBuilder {
 
         let chunks = Chunks::new(&rbv);
         let table = PopcountTable::new(Blocks::calc_block_size(rbv.length()));
-        SuccinctBitVector { rbv, chunks, table }
+        Fid { rbv, chunks, table }
     }
 
     fn current_length(&self) -> u64 {
         match &self.seed {
-            SuccinctBitVectorSeed::Length(n) => *n,
-            SuccinctBitVectorSeed::BitStr(bs) => bs.str().len() as u64,
+            FidSeed::Length(n) => *n,
+            FidSeed::BitStr(bs) => bs.str().len() as u64,
         }
     }
 }
 
 #[cfg(test)]
 mod builder_from_length_success_tests {
-    use super::SuccinctBitVectorBuilder;
+    use super::FidBuilder;
 
     struct IndexBitPair(u64, bool);
 
@@ -95,7 +95,7 @@ mod builder_from_length_success_tests {
             #[test]
             fn $name() {
                 let (in_length, index_bit_pairs) = $value;
-                let bv = SuccinctBitVectorBuilder::from_length(in_length).build();
+                let bv = FidBuilder::from_length(in_length).build();
                 for IndexBitPair(i, bit) in index_bit_pairs {
                     assert_eq!(bv.access(i), bit);
                 }
@@ -150,18 +150,18 @@ mod builder_from_length_success_tests {
 
 #[cfg(test)]
 mod builder_from_length_failure_tests {
-    use super::SuccinctBitVectorBuilder;
+    use super::FidBuilder;
 
     #[test]
     #[should_panic]
     fn empty() {
-        let _ = SuccinctBitVectorBuilder::from_length(0).build();
+        let _ = FidBuilder::from_length(0).build();
     }
 }
 
 #[cfg(test)]
 mod builder_from_bit_string_success_tests {
-    use super::{BitString, SuccinctBitVectorBuilder};
+    use super::{BitString, FidBuilder};
 
     struct IndexBitPair(u64, bool);
 
@@ -171,7 +171,7 @@ mod builder_from_bit_string_success_tests {
             #[test]
             fn $name() {
                 let (in_s, index_bit_pairs) = $value;
-                let bv = SuccinctBitVectorBuilder::from_bit_string(BitString::new(in_s)).build();
+                let bv = FidBuilder::from_bit_string(BitString::new(in_s)).build();
                 for IndexBitPair(i, bit) in index_bit_pairs {
                     assert_eq!(bv.access(i), bit);
                 }
@@ -279,7 +279,7 @@ mod builder_from_bit_string_failure_tests {
 
 #[cfg(test)]
 mod set_bit_success_tests {
-    use super::{BitString, SuccinctBitVectorBuilder};
+    use super::{BitString, FidBuilder};
 
     struct IndexBitPair(u64, bool);
 
@@ -289,7 +289,7 @@ mod set_bit_success_tests {
             #[test]
             fn $name() {
                 let (in_s, bits_to_set, index_bit_pairs) = $value;
-                let mut builder = SuccinctBitVectorBuilder::from_bit_string(BitString::new(in_s));
+                let mut builder = FidBuilder::from_bit_string(BitString::new(in_s));
 
                 for i in bits_to_set { builder.set_bit(i); }
                 let bv = builder.build();
@@ -372,18 +372,18 @@ mod set_bit_success_tests {
 
 #[cfg(test)]
 mod builder_set_bit_failure_tests {
-    use super::SuccinctBitVectorBuilder;
+    use super::FidBuilder;
 
     #[test]
     #[should_panic]
     fn set_bit_over_upper_bound() {
-        let _ = SuccinctBitVectorBuilder::from_length(2).set_bit(2).build();
+        let _ = FidBuilder::from_length(2).set_bit(2).build();
     }
 }
 
 #[cfg(test)]
 mod add_bit_success_tests {
-    use crate::SuccinctBitVectorBuilder;
+    use crate::FidBuilder;
 
     struct IndexBitPair(u64, bool);
 
@@ -393,7 +393,7 @@ mod add_bit_success_tests {
             #[test]
             fn $name() {
                 let (init_length, bits_to_add, index_bit_pairs) = $value;
-                let mut builder = SuccinctBitVectorBuilder::from_length(init_length);
+                let mut builder = FidBuilder::from_length(init_length);
 
                 for i in bits_to_add { builder.add_bit(i); }
                 let bv = builder.build();

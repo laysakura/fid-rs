@@ -1,18 +1,18 @@
-use super::{Blocks, Chunks, SuccinctBitVector};
+use super::{Blocks, Chunks, Fid};
 
-impl SuccinctBitVector {
-    /// Returns `i`-th element of the `SuccinctBitVector`.
+impl Fid {
+    /// Returns `i`-th element of the `Fid`.
     ///
     /// # Panics
-    /// When _`i` >= length of the `SuccinctBitVector`_.
+    /// When _`i` >= length of the `Fid`_.
     pub fn access(&self, i: u64) -> bool {
         self.rbv.access(i)
     }
 
-    /// Returns the number of _1_ in _[0, `i`]_ elements of the `SuccinctBitVector`.
+    /// Returns the number of _1_ in _[0, `i`]_ elements of the `Fid`.
     ///
     /// # Panics
-    /// When _`i` >= length of the `SuccinctBitVector`_.
+    /// When _`i` >= length of the `Fid`_.
     ///
     /// # Implementation detail
     ///
@@ -88,10 +88,10 @@ impl SuccinctBitVector {
         rank_from_chunk + rank_from_block as u64 + rank_from_table as u64
     }
 
-    /// Returns the number of _0_ in _[0, `i`]_ elements of the `SuccinctBitVector`.
+    /// Returns the number of _0_ in _[0, `i`]_ elements of the `Fid`.
     ///
     /// # Panics
-    /// When _`i` >= length of the `SuccinctBitVector`_.
+    /// When _`i` >= length of the `Fid`_.
     pub fn rank0(&self, i: u64) -> u64 {
         (i + 1) - self.rank(i)
     }
@@ -99,7 +99,7 @@ impl SuccinctBitVector {
     /// Returns the minimum position (0-origin) `i` where _`rank(i)` == num_ of `num`-th _1_ if exists. Else returns None.
     ///
     /// # Panics
-    /// When _`num` > length of the `SuccinctBitVector`_.
+    /// When _`num` > length of the `Fid`_.
     ///
     /// # Implementation detail
     /// Binary search using `rank()`.
@@ -130,7 +130,7 @@ impl SuccinctBitVector {
     /// Returns the minimum position (0-origin) `i` where _`rank(i)` == num_ of `num`-th _0_ if exists. Else returns None.
     ///
     /// # Panics
-    /// When _`num` > length of the `SuccinctBitVector`_.
+    /// When _`num` > length of the `Fid`_.
     pub fn select0(&self, num: u64) -> Option<u64> {
         let n = self.rbv.length();
         assert!(num <= n);
@@ -158,17 +158,17 @@ impl SuccinctBitVector {
 
 #[cfg(test)]
 mod access_success_tests {
-    // well-tested in succinct_bit_vector_builder::{builder_from_length_success_tests, builder_from_bit_string_success_tests}
+    // well-tested in fid_builder::{builder_from_length_success_tests, builder_from_bit_string_success_tests}
 }
 
 #[cfg(test)]
 mod access_failure_tests {
-    use super::super::SuccinctBitVectorBuilder;
+    use super::super::FidBuilder;
 
     #[test]
     #[should_panic]
     fn over_upper_bound() {
-        let bv = SuccinctBitVectorBuilder::from_length(2).build();
+        let bv = FidBuilder::from_length(2).build();
         let _ = bv.access(2);
     }
 }
@@ -176,7 +176,7 @@ mod access_failure_tests {
 #[cfg(test)]
 #[allow(non_snake_case)]
 mod rank_success_tests {
-    use super::super::{BitString, SuccinctBitVectorBuilder};
+    use super::super::{BitString, FidBuilder};
 
     macro_rules! parameterized_tests {
         ($($name:ident: $value:expr,)*) => {
@@ -185,7 +185,7 @@ mod rank_success_tests {
             fn $name() {
                 let (in_bv_str, in_i, expected_rank) = $value;
                 assert_eq!(
-                    SuccinctBitVectorBuilder::from_bit_string(BitString::new(in_bv_str))
+                    FidBuilder::from_bit_string(BitString::new(in_bv_str))
                         .build().rank(in_i),
                     expected_rank);
             }
@@ -236,12 +236,12 @@ mod rank_success_tests {
 
 #[cfg(test)]
 mod rank_failure_tests {
-    use super::super::SuccinctBitVectorBuilder;
+    use super::super::FidBuilder;
 
     #[test]
     #[should_panic]
     fn rank_over_upper_bound() {
-        let bv = SuccinctBitVectorBuilder::from_length(2).build();
+        let bv = FidBuilder::from_length(2).build();
         let _ = bv.rank(2);
     }
 }
@@ -249,7 +249,7 @@ mod rank_failure_tests {
 #[cfg(test)]
 #[allow(non_snake_case)]
 mod rank0_success_tests {
-    use super::super::{BitString, SuccinctBitVectorBuilder};
+    use super::super::{BitString, FidBuilder};
 
     macro_rules! parameterized_tests {
         ($($name:ident: $value:expr,)*) => {
@@ -258,7 +258,7 @@ mod rank0_success_tests {
             fn $name() {
                 let (in_bv_str, in_i, expected_rank0) = $value;
                 assert_eq!(
-                    SuccinctBitVectorBuilder::from_bit_string(BitString::new(in_bv_str))
+                    FidBuilder::from_bit_string(BitString::new(in_bv_str))
                         .build().rank0(in_i),
                     expected_rank0);
             }
@@ -292,12 +292,12 @@ mod rank0_success_tests {
 
 #[cfg(test)]
 mod rank0_0_failure_tests {
-    use super::super::SuccinctBitVectorBuilder;
+    use super::super::FidBuilder;
 
     #[test]
     #[should_panic]
     fn rank0_over_upper_bound() {
-        let bv = SuccinctBitVectorBuilder::from_length(2).build();
+        let bv = FidBuilder::from_length(2).build();
         let _ = bv.rank0(2);
     }
 }
@@ -309,12 +309,12 @@ mod select_success_tests {
 
 #[cfg(test)]
 mod select_failure_tests {
-    use super::super::SuccinctBitVectorBuilder;
+    use super::super::FidBuilder;
 
     #[test]
     #[should_panic]
     fn select_over_max_rank() {
-        let bv = SuccinctBitVectorBuilder::from_length(2).build();
+        let bv = FidBuilder::from_length(2).build();
         let _ = bv.select(3);
     }
 }
@@ -326,12 +326,12 @@ mod select0_success_tests {
 
 #[cfg(test)]
 mod select0_failure_tests {
-    use super::super::SuccinctBitVectorBuilder;
+    use super::super::FidBuilder;
 
     #[test]
     #[should_panic]
     fn select_over_max_rank() {
-        let bv = SuccinctBitVectorBuilder::from_length(2).build();
+        let bv = FidBuilder::from_length(2).build();
         let _ = bv.select0(3);
     }
 }

@@ -20,19 +20,19 @@ fn git_hash() -> String {
     String::from(String::from_utf8(output.stdout).unwrap().trim())
 }
 
-mod succinct_bit_vector {
+mod fid {
     use criterion::{BatchSize, Criterion};
-    use fid_rs::{BitString, SuccinctBitVectorBuilder};
+    use fid_rs::{BitString, FidBuilder};
 
     const NS: [u64; 5] = [1 << 16, 1 << 17, 1 << 18, 1 << 19, 1 << 20];
 
     pub fn builder_from_length_benchmark(_: &mut Criterion) {
         super::c().bench_function_over_inputs(
             &format!(
-                "[{}] SuccinctBitVectorBuilder::from_length(N).build()",
+                "[{}] FidBuilder::from_length(N).build()",
                 super::git_hash()
             ),
-            |b, &&n| b.iter(|| SuccinctBitVectorBuilder::from_length(n).build()),
+            |b, &&n| b.iter(|| FidBuilder::from_length(n).build()),
             &NS,
         );
     }
@@ -40,7 +40,7 @@ mod succinct_bit_vector {
     pub fn builder_from_bit_string_benchmark(_: &mut Criterion) {
         super::c().bench_function_over_inputs(
             &format!(
-                "[{}] SuccinctBitVectorBuilder::from_bit_string(\"00...(repeated N-times)\").build()",
+                "[{}] FidBuilder::from_bit_string(\"00...(repeated N-times)\").build()",
                 super::git_hash()
             ),
             |b, &&n| {
@@ -49,7 +49,7 @@ mod succinct_bit_vector {
                         let s = String::from_utf8(vec!['0' as u8; n as usize]).unwrap();
                         BitString::new(&s)
                     },
-                    |bs| SuccinctBitVectorBuilder::from_bit_string(bs).build(),
+                    |bs| FidBuilder::from_bit_string(bs).build(),
                     BatchSize::SmallInput,
                 )
             },
@@ -62,13 +62,13 @@ mod succinct_bit_vector {
 
         super::c().bench_function_over_inputs(
             &format!(
-                "[{}] SuccinctBitVector::rank(N) {} times",
+                "[{}] Fid::rank(N) {} times",
                 super::git_hash(),
                 times
             ),
             move |b, &&n| {
                 b.iter_batched(
-                    || SuccinctBitVectorBuilder::from_length(n).build(),
+                    || FidBuilder::from_length(n).build(),
                     |bv| {
                         // iter_batched() does not properly time `routine` time when `setup` time is far longer than `routine` time.
                         // Tested function takes too short compared to build(). So loop many times.
@@ -88,14 +88,14 @@ mod succinct_bit_vector {
 
         super::c().bench_function_over_inputs(
             &format!(
-                "[{}] SuccinctBitVector::select(N) {} times",
+                "[{}] Fid::select(N) {} times",
                 super::git_hash(),
                 times
             ),
             move |b, &&n| {
                 b.iter_batched(
                     || {
-                        let mut builder = SuccinctBitVectorBuilder::from_length(n);
+                        let mut builder = FidBuilder::from_length(n);
                         for i in 0..n {
                             builder.set_bit(i);
                         }
@@ -120,13 +120,13 @@ mod succinct_bit_vector {
 
         super::c().bench_function_over_inputs(
             &format!(
-                "[{}] SuccinctBitVector::rank0(N) {} times",
+                "[{}] Fid::rank0(N) {} times",
                 super::git_hash(),
                 times
             ),
             move |b, &&n| {
                 b.iter_batched(
-                    || SuccinctBitVectorBuilder::from_length(n).build(),
+                    || FidBuilder::from_length(n).build(),
                     |bv| {
                         // iter_batched() does not properly time `routine` time when `setup` time is far longer than `routine` time.
                         // Tested function takes too short compared to build(). So loop many times.
@@ -146,13 +146,13 @@ mod succinct_bit_vector {
 
         super::c().bench_function_over_inputs(
             &format!(
-                "[{}] SuccinctBitVector::select0(N) {} times",
+                "[{}] Fid::select0(N) {} times",
                 super::git_hash(),
                 times
             ),
             move |b, &&n| {
                 b.iter_batched(
-                    || SuccinctBitVectorBuilder::from_length(n).build(),
+                    || FidBuilder::from_length(n).build(),
                     |bv| {
                         // iter_batched() does not properly time `routine` time when `setup` time is far longer than `routine` time.
                         // Tested function takes too short compared to build(). So loop many times.
@@ -341,12 +341,12 @@ mod louds {
 
 criterion_group!(
     benches,
-    succinct_bit_vector::builder_from_length_benchmark,
-    succinct_bit_vector::builder_from_bit_string_benchmark,
-    succinct_bit_vector::rank_benchmark,
-    succinct_bit_vector::select_benchmark,
-    succinct_bit_vector::rank0_benchmark,
-    succinct_bit_vector::select0_benchmark,
+    fid::builder_from_length_benchmark,
+    fid::builder_from_bit_string_benchmark,
+    fid::rank_benchmark,
+    fid::select_benchmark,
+    fid::rank0_benchmark,
+    fid::select0_benchmark,
     louds::builder_from_bit_string_benchmark,
     louds::node_num_to_index_benchmark,
     louds::index_to_node_num_benchmark,
