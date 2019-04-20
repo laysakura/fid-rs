@@ -19,9 +19,9 @@ use std::collections::HashSet;
 ///
 /// # Examples
 /// ```
-/// extern crate succinct_rs;
+/// extern crate fid_rs;
 ///
-/// use succinct_rs::{BitString, SuccinctBitVectorBuilder};
+/// use fid_rs::{BitString, SuccinctBitVectorBuilder};
 ///
 /// // Construction -------------------------
 /// // `01001` built by `from_bit_string()`

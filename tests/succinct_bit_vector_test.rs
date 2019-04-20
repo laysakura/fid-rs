@@ -1,4 +1,4 @@
-use succinct_rs::{BitString, SuccinctBitVectorBuilder};
+use fid_rs::{BitString, SuccinctBitVectorBuilder};
 
 #[test]
 fn build_from_length() {

@@ -6,7 +6,7 @@
 ///
 /// # Examples
 /// ```
-/// use succinct_rs::BitString;
+/// use fid_rs::BitString;
 ///
 /// let bs = BitString::new("01");
 /// assert_eq!(bs.str(), "01");

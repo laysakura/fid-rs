@@ -1,5 +1,5 @@
 mod louds_feature_test {
-    use succinct_rs::{BitString, LoudsBuilder, LoudsNodeNum};
+    use fid_rs::{BitString, LoudsBuilder, LoudsNodeNum};
 
     #[test]
     fn fuzzing_test() {

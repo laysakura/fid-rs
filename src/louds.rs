@@ -62,9 +62,9 @@ use crate::{SuccinctBitVector, SuccinctBitVectorBuilder};
 /// Then, create this tree structure with `Louds` and call operations to it.
 ///
 /// ```
-/// extern crate succinct_rs;
+/// extern crate fid_rs;
 ///
-/// use succinct_rs::{BitString, LoudsBuilder, LoudsIndex, LoudsNodeNum};
+/// use fid_rs::{BitString, LoudsBuilder, LoudsIndex, LoudsNodeNum};
 ///
 /// // Construct from LBS.
 /// let bs = BitString::new("10_1110_10_0_1110_0_0_10_110_0_0_0");

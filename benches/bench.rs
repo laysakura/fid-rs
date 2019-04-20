@@ -22,7 +22,7 @@ fn git_hash() -> String {
 
 mod succinct_bit_vector {
     use criterion::{BatchSize, Criterion};
-    use succinct_rs::{BitString, SuccinctBitVectorBuilder};
+    use fid_rs::{BitString, SuccinctBitVectorBuilder};
 
     const NS: [u64; 5] = [1 << 16, 1 << 17, 1 << 18, 1 << 19, 1 << 20];
 
@@ -170,7 +170,7 @@ mod succinct_bit_vector {
 
 mod louds {
     use criterion::{BatchSize, Criterion};
-    use succinct_rs::{BitString, LoudsBuilder, LoudsIndex, LoudsNodeNum};
+    use fid_rs::{BitString, LoudsBuilder, LoudsIndex, LoudsNodeNum};
 
     const NS: [u64; 5] = [1 << 11, 1 << 12, 1 << 13, 1 << 14, 1 << 15];
 
