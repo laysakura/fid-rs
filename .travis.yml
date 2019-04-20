@@ -1,0 +1,51 @@
+language: rust
+rust:
+  - 1.33.0  # pinned stable Rust release
+  - stable
+  - beta
+  - nightly
+os:
+  - linux
+  - osx
+branches:
+  only:
+    - master
+    - /^v[0-9]/  # tag
+cache: cargo
+
+# gnuplot for Criterion HTML Report
+addons:
+  apt:
+    packages:
+      - gnuplot-nox
+  homebrew:
+    packages:
+      - gnuplot
+
+before_script:
+  - ./ci/before_script.sh
+script:
+  - ./ci/script.sh
+
+deploy:
+  # GitHub Pages
+  - provider: pages
+    skip_cleanup: true
+    github_token: "$GITHUB_TOKEN"
+    local_dir: target/doc
+    on:
+      branch: master
+      rust: stable
+      condition: "$TRAVIS_OS_NAME == linux"
+  # crates.io
+  - provider: cargo
+    token:
+      secure: ropU3n6/KkmaNSjjqAW+Do3z3x9HGienPrH14tzB+h6PqTnu9VZNe4vBNbSixOl9U/x3yCC3j8b8hhLVYiqJt5ADmAH/QeCaLHMos/3q653unhqunttw/MoZkCXMdNqxHw8ZEvBAMOQrCi6Vp67G950b91Ouv7/GQgfjOSXK/7vcdbPwzAaXRA6VaUmUdhpqm+YOgFf2rdCSZEZeE6pE2FU7AK007VOOxQzHhMBQ9bPAnbEFnIqlHQUa7rQe9cbESLFCEND4PqywG5RPtUUcQevFyNjXDJjUDm1jMBAp/BxQXYyv764WMkz1RyT9/FEY5FOfYGNMkF/qXlvTT2N8krq3auP2+tOb9JWHWZ1mKTJfLXMdZaIJ0ehss72dluMKPp+kq9aMAHC4mpGXM3TT12IGMoNRwmlxI2ykWLGFjaqNq73iUPEIZeLU/eqcmN/YgNJQ8PrmgbBoFgiMxSXQANOctYwtauWFGGFhEufXDBH9alv0QUFNW1+q5M0sC9mrHWaqiaJinxPscy+KkckLGxszGuV2uTkVNuOPFTnkO1V4Grdc5l2hky9q/vFOxiUGHHkG0tl8NyNIcrwM767CvlfXQGr2rLn/MLsaTZUzpjOMcoAWcN3jCrHFxgxfPH4FsIhvqPRt7PyWGooPn3x6U7/Z6dzR/ehiVmI8cRXYoN0=
+    on:
+      tags: true
+      rust: stable
+      condition: "$TRAVIS_OS_NAME == linux"
+
+env:
+  global:
+    secure: vFqzBJOlkIXxHgRgdkcNykjEPeVeC4F7S6t+mkrHaYTZPtIA/RSh4O1P6Z8jTCXIuWyHpa21EKy/5tvzOfj2aQImu03yBT6MYa1AcRV8GmnTjKC8fANzXlxk+KeYnEc3FCZJK0ZZFCSvmGTQ5MKeldfWaprRhw9UeFDoECXxNmxG3GTmFAMTAjU+bAAW5Opo3niq6dMAhIyvXvHsycb4ZpLySPAuzNdHhQxrwUkocqt+25nJ8puy45Zmrpb3IxqqP+2/MBDoEcB6XidSXx+JHbqas/CXSP/gpAEPgUujewAJUvL1m/f0fXCKmcmDeIbD5ep0ZGpdz14hNlaOIy3ZBDY7ZkjG3D3u7Go9+alsDvwelo+3EkRD/0k6Y1yR+6/jIOIUv+dlYP1taVjw78e+fwJXNDU47kGRZVsnmPxcChiy2XTVPlRre2ODrYcCHzWCrHwk6RjxEpvViSHMTDCAmrq8v07fHOT6QQrLwJ1zuqAgEEWM5ZZi0+yjWYoQDLb4yt0F7WpqULPLJL5WjdBVYOQCedaHuLXfDCR9eJhQzzb3kxInN6ibbiMjRx3pmkthI+9nh2tphqUJU+feVLyc7/ODG8fnR52xlUqyB693sugVdtUxo25MlXdN10eFKHlxEGgIYFTKmXzBSQLdy6beErFCoJuYTFRurAP13EbgpKY=
