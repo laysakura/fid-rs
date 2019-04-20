@@ -1,6 +1,4 @@
-use super::{
-    BitString, Blocks, Chunks, Fid, FidBuilder, FidSeed,
-};
+use super::{BitString, Blocks, Chunks, Fid, FidBuilder, FidSeed};
 use crate::internal_data_structure::popcount_table::PopcountTable;
 use crate::internal_data_structure::raw_bit_vector::RawBitVector;
 use std::collections::HashSet;
@@ -48,9 +46,7 @@ impl super::FidBuilder {
         }
         self.seed = match &self.seed {
             FidSeed::Length(n) => FidSeed::Length(n + 1),
-            FidSeed::BitStr(bs) => {
-                FidSeed::BitStr(BitString::new(&format!("{}0", bs.str())))
-            }
+            FidSeed::BitStr(bs) => FidSeed::BitStr(BitString::new(&format!("{}0", bs.str()))),
         };
         self
     }
