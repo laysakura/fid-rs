@@ -1,4 +1,5 @@
 # fid-rs
+INTENTIONAL DIFF
 
 High performance FID (Fully Indexable Dictionary) library.
 
