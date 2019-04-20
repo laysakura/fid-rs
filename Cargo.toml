@@ -1,0 +1,22 @@
+[package]
+name = "fid-rs"
+version = "0.1.0"
+authors = ["Sho Nakatani <lay.sakura@gmail.com>"]
+description = "High performance FID (Fully Indexable Dictionary) library"
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/laysakura/fid-rs"
+homepage = "https://github.com/laysakura/fid-rs"
+keywords = ["fid", "succinct-bit-vector"] # up to 5 keywords, each keyword should have <= 20 chars
+categories = ["compression", "data-structures"]
+edition = "2018"
+
+[dependencies]
+
+[dev-dependencies]
+criterion = "0.2"
+rand = "0.6"
+
+[[bench]]
+name = "bench"
+harness = false
