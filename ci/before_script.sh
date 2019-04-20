@@ -2,3 +2,4 @@
 set -eux
 
 rustup component add rustfmt
+cargo install cargo-readme
