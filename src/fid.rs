@@ -10,7 +10,7 @@ use super::internal_data_structure::popcount_table::PopcountTable;
 use super::internal_data_structure::raw_bit_vector::RawBitVector;
 use std::collections::HashSet;
 
-/// Succinct bit vector.
+/// FID (Fully Indexable Dictionary).
 ///
 /// This class can handle bit sequence of virtually **arbitrary length.**
 ///
@@ -62,7 +62,7 @@ use std::collections::HashSet;
 /// ```
 ///
 /// # Complexity
-/// See [README](https://github.com/laysakura/succinct.rs/blob/master/README.md#succinct-bit-vector-complexity).
+/// See [README](https://github.com/laysakura/fid-rs/blob/master/README.md#complexity).
 ///
 /// # Implementation detail
 /// [access()](#method.access)'s implementation is trivial.
