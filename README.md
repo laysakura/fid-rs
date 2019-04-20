@@ -34,8 +34,6 @@ To use fid-rs, add the following to your `Cargo.toml` file:
 fid_rs = "0.1"
 ```
 
-(TODO various kinds of examples like from..() and iteration)
-
 ```rust
 extern crate fid_rs;
 
