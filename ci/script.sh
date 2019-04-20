@@ -1,12 +1,18 @@
 #!/usr/bin/env bash
 set -eux
 
-## README.md should be generated from src/lib.rs
-f=`mktemp`
-cargo readme > $f
-diff $f README.md
+## Auto commit & push by CI
+### README.md from src/lib.rs
+cargo readme > README.md
+git add README.md
+git commit -m 'cargo readme > README.md' &&:
+### cargo fmt
+cargo fmt --all
+git add -A
+git commit -m 'cargo fmt --all' &&:
+git push origin ${TRAVIS_BRANCH}
 
-cargo fmt --all -- --check
+## cargo build ~ bench
 cargo build --release --verbose --all
 cargo test --release --verbose --all
 cargo doc
