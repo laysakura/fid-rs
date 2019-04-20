@@ -10,7 +10,7 @@ git commit -m 'cargo readme > README.md' &&:
 cargo fmt --all
 git add -A
 git commit -m 'cargo fmt --all' &&:
-git push origin ${TRAVIS_BRANCH}
+git push https://${GITHUB_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git ${TRAVIS_BRANCH}
 
 ## cargo build ~ bench
 cargo build --release --verbose --all
