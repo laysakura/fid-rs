@@ -5,8 +5,9 @@ rustup component add rustfmt
 cargo readme || cargo install cargo-readme  # skip if already available
 
 ## Auto commit & push by CI
-git clone git@github.com:laysakura/fid-rs.git
 (
+    cd `mktemp -d`
+    git clone git@github.com:laysakura/fid-rs.git
     cd fid-rs
     git checkout ${TRAVIS_PULL_REQUEST_BRANCH}
 
