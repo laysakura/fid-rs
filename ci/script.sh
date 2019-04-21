@@ -3,8 +3,6 @@ set -eux
 
 ## Auto commit & push by CI
 ### README.md from src/lib.rs
-git branch -a
-
 cargo readme > README.md
 git add README.md
 git commit -m 'cargo readme > README.md' &&:
@@ -12,6 +10,8 @@ git commit -m 'cargo readme > README.md' &&:
 cargo fmt --all
 git add -A
 git commit -m 'cargo fmt --all' &&:
+### git push
+git fetch
 git push https://${GITHUB_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git ${TRAVIS_PULL_REQUEST_BRANCH}
 
 ## cargo build ~ bench
