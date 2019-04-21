@@ -1,4 +1,44 @@
 use super::{Blocks, Chunks, Fid};
+use crate::internal_data_structure::bit_string::BitString;
+use crate::internal_data_structure::popcount_table::PopcountTable;
+use crate::internal_data_structure::raw_bit_vector::RawBitVector;
+
+impl From<&str> for Fid {
+    /// Provides validated string representation of bit sequence.
+    ///
+    /// - '0' is interpreted as _0_.
+    /// - '1' is interpreted as _1_.
+    /// - '_' is just ignored.
+    ///
+    /// # Examples
+    /// ```
+    /// use fid_rs::Fid;
+    ///
+    /// let fid = Fid::from("01_11");
+    /// assert_eq!(fid.access(0), false);
+    /// assert_eq!(fid.access(1), true);
+    /// assert_eq!(fid.access(2), true);
+    /// assert_eq!(fid.access(3), true);
+    /// ```
+    ///
+    /// # Panics
+    /// When:
+    /// - `s` contains any character other than '0', '1', and '_'.
+    /// - `s` does not contain any '0' or '1'
+    fn from(s: &str) -> Fid {
+        let bs = BitString::new(s);
+        let rbv = RawBitVector::from_bit_string(&bs);
+        Fid::from(rbv)
+    }
+}
+
+impl From<RawBitVector> for Fid {
+    fn from(rbv: RawBitVector) -> Fid {
+        let chunks = Chunks::new(&rbv);
+        let table = PopcountTable::new(Blocks::calc_block_size(rbv.length()));
+        Fid { rbv, chunks, table }
+    }
+}
 
 impl Fid {
     /// Returns `i`-th element of the `Fid`.
@@ -157,6 +197,51 @@ impl Fid {
 }
 
 #[cfg(test)]
+mod from_str_success_tests {
+    use crate::Fid;
+
+    macro_rules! parameterized_tests {
+        ($($name:ident: $value:expr,)*) => {
+        $(
+            #[test]
+            fn $name() {
+                let (s, expected_bits) = $value;
+                let bv = Fid::from(s);
+
+                // TODO length check
+                // assert_eq!(bv.length(), expected_bits);
+                for (i, bit) in expected_bits.iter().enumerate() {
+                    assert_eq!(bv.access(i as u64), *bit);
+                }
+            }
+        )*
+        }
+    }
+
+    parameterized_tests! {
+        t1: ("0", vec![false]),
+        t2: ("1", vec![true]),
+        t3: ("00", vec![false, false]),
+        t4: ("01", vec![false, true]),
+        t5: ("10", vec![true, false]),
+        t6: ("11", vec![true, true]),
+        t7: ("0101_0101__0101_1100__1000_001", vec![
+            false, true, false, true,
+            false, true, false, true,
+            false, true, false, true,
+            true, true, false, false,
+            true, false, false, false,
+            false, false, true,
+        ]),
+    }
+}
+
+#[cfg(test)]
+mod from_str_failure_tests {
+    // well-tested in BitString::new()
+}
+
+#[cfg(test)]
 mod access_success_tests {
     // well-tested in fid_builder::{builder_from_length_success_tests, builder_from_bit_string_success_tests}
 }
@@ -176,7 +261,7 @@ mod access_failure_tests {
 #[cfg(test)]
 #[allow(non_snake_case)]
 mod rank_success_tests {
-    use super::super::{BitString, FidBuilder};
+    use crate::Fid;
 
     macro_rules! parameterized_tests {
         ($($name:ident: $value:expr,)*) => {
@@ -185,9 +270,9 @@ mod rank_success_tests {
             fn $name() {
                 let (in_bv_str, in_i, expected_rank) = $value;
                 assert_eq!(
-                    FidBuilder::from_bit_string(BitString::new(in_bv_str))
-                        .build().rank(in_i),
-                    expected_rank);
+                    Fid::from(in_bv_str).rank(in_i),
+                    expected_rank
+                );
             }
         )*
         }
@@ -249,7 +334,7 @@ mod rank_failure_tests {
 #[cfg(test)]
 #[allow(non_snake_case)]
 mod rank0_success_tests {
-    use super::super::{BitString, FidBuilder};
+    use crate::Fid;
 
     macro_rules! parameterized_tests {
         ($($name:ident: $value:expr,)*) => {
@@ -258,9 +343,9 @@ mod rank0_success_tests {
             fn $name() {
                 let (in_bv_str, in_i, expected_rank0) = $value;
                 assert_eq!(
-                    FidBuilder::from_bit_string(BitString::new(in_bv_str))
-                        .build().rank0(in_i),
-                    expected_rank0);
+                    Fid::from(in_bv_str).rank0(in_i),
+                    expected_rank0
+                );
             }
         )*
         }

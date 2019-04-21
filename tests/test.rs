@@ -1,4 +1,4 @@
-use fid_rs::{BitString, FidBuilder};
+use fid_rs::{Fid, FidBuilder};
 
 #[test]
 fn build_from_length() {
@@ -19,21 +19,10 @@ fn build_from_length_and_set_bit() {
 }
 
 #[test]
-fn build_from_bit_string() {
-    let bv = FidBuilder::from_bit_string(BitString::new("01")).build();
-    assert_eq!(bv.access(0), false);
-    assert_eq!(bv.access(1), true);
-}
-
-#[test]
-fn build_from_bit_string_and_set_bit() {
-    let bv = FidBuilder::from_bit_string(BitString::new("00"))
-        .set_bit(0)
-        .set_bit(1)
-        .set_bit(0)
-        .build();
-    assert_eq!(bv.access(0), true);
-    assert_eq!(bv.access(1), true);
+fn from_str() {
+    let fid = Fid::from("01");
+    assert_eq!(fid.access(0), false);
+    assert_eq!(fid.access(1), true);
 }
 
 #[test]
@@ -104,64 +93,63 @@ fn fuzzing_test() {
         let s = &format!("{:b}", rand::random::<u128>());
         eprintln!("build(): bit vec = \"{}\"", s);
 
-        let bs = BitString::new(s);
-        let bv = FidBuilder::from_bit_string(bs).build();
+        let fid = Fid::from(s.as_str());
 
         for i in 0..s.len() {
             eprintln!("access(): bit vec = \"{}\", i = {}, ", s, i);
             assert_eq!(
-                bv.access(i as u64),
+                fid.access(i as u64),
                 access_from_bit_string(s, i as u64),
                 "bit vec = \"{}\", i={}, Fid::access()={}, access_from_bit_string={}",
                 s,
                 i,
-                bv.access(i as u64),
+                fid.access(i as u64),
                 access_from_bit_string(s, i as u64)
             );
 
             eprintln!("rank(): bit vec = \"{}\", i = {}, ", s, i);
             assert_eq!(
-                bv.rank(i as u64),
+                fid.rank(i as u64),
                 rank_from_bit_string(s, i as u64),
                 "bit vec = \"{}\", i={}, Fid::rank()={}, rank_from_bit_string={}",
                 s,
                 i,
-                bv.rank(i as u64),
+                fid.rank(i as u64),
                 rank_from_bit_string(s, i as u64)
             );
 
             let num = i as u64;
             eprintln!("select(): bit vec = \"{}\", num = {}, ", s, num);
             assert_eq!(
-                bv.select(num),
+                fid.select(num),
                 select_from_bit_string(s, num),
                 "bit vec = \"{}\", num={}, Fid::select()={:?}, select_from_bit_string={:?}",
                 s,
                 num,
-                bv.select(num),
+                fid.select(num),
                 select_from_bit_string(s, num)
             );
 
             eprintln!("rank0(): bit vec = \"{}\", i = {}, ", s, i);
             assert_eq!(
-                bv.rank0(i as u64),
+                fid.rank0(i as u64),
                 rank0_from_bit_string(s, i as u64),
                 "bit vec = \"{}\", i={}, Fid::rank0()={}, rank0_from_bit_string={}",
                 s,
                 i,
-                bv.rank0(i as u64),
+                fid.rank0(i as u64),
                 rank0_from_bit_string(s, i as u64)
             );
 
             let num = i as u64;
             eprintln!("select0(): bit vec = \"{}\", num = {}, ", s, num);
             assert_eq!(
-                bv.select0(num),
+                fid.select0(num),
                 select0_from_bit_string(s, num),
                 "bit vec = \"{}\", num={}, Fid::select0()={:?}, select0_from_bit_string={:?}",
                 s,
                 num,
-                bv.select0(num),
+                fid.select0(num),
                 select0_from_bit_string(s, num)
             );
         }

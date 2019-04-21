@@ -22,7 +22,7 @@ fn git_hash() -> String {
 
 mod fid {
     use criterion::{BatchSize, Criterion};
-    use fid_rs::{BitString, FidBuilder};
+    use fid_rs::{Fid, FidBuilder};
 
     const NS: [u64; 5] = [1 << 16, 1 << 17, 1 << 18, 1 << 19, 1 << 20];
 
@@ -34,7 +34,7 @@ mod fid {
         );
     }
 
-    pub fn builder_from_bit_string_benchmark(_: &mut Criterion) {
+    pub fn from_str_benchmark(_: &mut Criterion) {
         super::c().bench_function_over_inputs(
             &format!(
                 "[{}] FidBuilder::from_bit_string(\"00...(repeated N-times)\").build()",
@@ -42,11 +42,8 @@ mod fid {
             ),
             |b, &&n| {
                 b.iter_batched(
-                    || {
-                        let s = String::from_utf8(vec!['0' as u8; n as usize]).unwrap();
-                        BitString::new(&s)
-                    },
-                    |bs| FidBuilder::from_bit_string(bs).build(),
+                    || String::from_utf8(vec!['0' as u8; n as usize]).unwrap(),
+                    |s| Fid::from(s.as_str()),
                     BatchSize::SmallInput,
                 )
             },
@@ -152,7 +149,7 @@ mod fid {
 criterion_group!(
     benches,
     fid::builder_from_length_benchmark,
-    fid::builder_from_bit_string_benchmark,
+    fid::from_str_benchmark,
     fid::rank_benchmark,
     fid::select_benchmark,
     fid::rank0_benchmark,

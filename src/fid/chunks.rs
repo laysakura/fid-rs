@@ -84,8 +84,8 @@ impl super::Chunks {
 
 #[cfg(test)]
 mod new_success_tests {
-    use super::super::BitString;
     use super::Chunks;
+    use crate::internal_data_structure::bit_string::BitString;
     use crate::internal_data_structure::raw_bit_vector::RawBitVector;
 
     struct Input<'a> {
