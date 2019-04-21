@@ -1,4 +1,55 @@
 use super::{Blocks, Chunks, Fid};
+use crate::internal_data_structure::popcount_table::PopcountTable;
+use crate::internal_data_structure::raw_bit_vector::RawBitVector;
+
+impl From<&str> for Fid {
+    /// Provides validated string representation of bit sequence.
+    ///
+    /// - '0' is interpreted as _0_.
+    /// - '1' is interpreted as _1_.
+    /// - '_' is just ignored.
+    ///
+    /// # Examples
+    /// ```
+    /// use fid_rs::Fid;
+    ///
+    /// let fid = Fid::from("01_11");
+    /// assert_eq!(fid.access(0), false);
+    /// assert_eq!(fid.access(1), true);
+    /// assert_eq!(fid.access(2), true);
+    /// assert_eq!(fid.access(3), true);
+    /// ```
+    ///
+    /// # Panics
+    /// When:
+    /// - `s` contains any character other than '0', '1', and '_'.
+    /// - `s` does not contain any '0' or '1'
+    fn from(s: &str) -> Fid {
+        let parsed: String = s
+            .chars()
+            .filter(|c| match c {
+                '0' => true,
+                '1' => true,
+                '_' => false,
+                _ => panic!("`s` must consist of '0' or '1'. '{}' included.", c),
+            })
+            .collect();
+        assert!(!parsed.is_empty(), "`str` must contain any '0' or '1'.");
+
+        // TODO stop using BitString
+        let bs = crate::BitString::new(&parsed);
+        let rbv = RawBitVector::from_bit_string(&bs);
+        Fid::from(rbv)
+    }
+}
+
+impl From<RawBitVector> for Fid {
+    fn from(rbv: RawBitVector) -> Fid {
+        let chunks = Chunks::new(&rbv);
+        let table = PopcountTable::new(Blocks::calc_block_size(rbv.length()));
+        Fid { rbv, chunks, table }
+    }
+}
 
 impl Fid {
     /// Returns `i`-th element of the `Fid`.
@@ -166,7 +217,7 @@ mod from_str_success_tests {
             #[test]
             fn $name() {
                 let (s, expected_bits) = $value;
-                let bv = Fid::from(s).unwrap();
+                let bv = Fid::from(s);
 
                 // TODO length check
                 // assert_eq!(bv.length(), expected_bits);
@@ -190,6 +241,7 @@ mod from_str_success_tests {
             false, true, false, true,
             false, true, false, true,
             true, true, false, false,
+            true, false, false, false,
             false, false, true,
         ]),
     }
@@ -203,9 +255,10 @@ mod from_str_failure_tests {
         ($($name:ident: $value:expr,)*) => {
         $(
             #[test]
+            #[should_panic]
             fn $name() {
                 let s = $value;
-                assert!(Fid::from(s).is_none());
+                Fid::from(s);
             }
         )*
         }
