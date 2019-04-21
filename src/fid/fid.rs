@@ -28,8 +28,7 @@ impl From<&str> for Fid {
         let parsed: String = s
             .chars()
             .filter(|c| match c {
-                '0' => true,
-                '1' => true,
+                '0' | '1' => true,
                 '_' => false,
                 _ => panic!("`s` must consist of '0' or '1'. '{}' included.", c),
             })
