@@ -27,7 +27,7 @@ impl From<&str> for Fid {
     /// - `s` does not contain any '0' or '1'
     fn from(s: &str) -> Fid {
         let bs = BitString::new(s);
-        let rbv = RawBitVector::from_bit_string(&bs);
+        let rbv = RawBitVector::from(bs);
         Fid::from(rbv)
     }
 }

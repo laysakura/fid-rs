@@ -8,6 +8,19 @@ pub struct RawBitVector {
     last_byte_len: u8,
 }
 
+impl From<BitString> for RawBitVector {
+    /// Makes a bit vector from `BitString` representation.
+    fn from(bs: BitString) -> RawBitVector {
+        let mut rbv = RawBitVector::from_length(bs.str().len() as u64);
+        for (i, c) in bs.str().chars().enumerate() {
+            if c == '1' {
+                rbv.set_bit(i as u64);
+            };
+        }
+        rbv
+    }
+}
+
 impl RawBitVector {
     /// Makes a bit vector of `length`, willed with 0.
     ///
@@ -27,17 +40,6 @@ impl RawBitVector {
             byte_vec: vec![0; ((length - 1) / 8 + 1) as usize],
             last_byte_len,
         }
-    }
-
-    /// Makes a bit vector from `BitString` representation.
-    pub fn from_bit_string(bit_str: &BitString) -> RawBitVector {
-        let mut rbv = RawBitVector::from_length(bit_str.str().len() as u64);
-        for (i, c) in bit_str.str().chars().enumerate() {
-            if c == '1' {
-                rbv.set_bit(i as u64);
-            };
-        }
-        rbv
     }
 
     /// Returns i-th bit.
@@ -296,7 +298,7 @@ mod from_bit_string_success_tests {
             #[test]
             fn $name() {
                 let (in_s, index_bit_pairs) = $value;
-                let rbv = RawBitVector::from_bit_string(&BitString::new(in_s));
+                let rbv = RawBitVector::from(BitString::new(in_s));
                 for IndexBitPair(i, bit) in index_bit_pairs {
                     assert_eq!(rbv.access(i), bit);
                 }
@@ -447,7 +449,7 @@ mod popcount_success_tests {
             #[test]
             fn $name() {
                 let (in_s, expected_popcount) = $value;
-                let rbv = RawBitVector::from_bit_string(&BitString::new(in_s));
+                let rbv = RawBitVector::from(BitString::new(in_s));
                 assert_eq!(rbv.popcount(), expected_popcount);
             }
         )*
@@ -487,7 +489,7 @@ mod set_bit_success_tests {
             #[test]
             fn $name() {
                 let (in_s, bits_to_set, index_bit_pairs) = $value;
-                let mut rbv = RawBitVector::from_bit_string(&BitString::new(in_s));
+                let mut rbv = RawBitVector::from(BitString::new(in_s));
 
                 for i in bits_to_set { rbv.set_bit(i) }
 
@@ -589,7 +591,7 @@ mod copy_sub_success_tests {
             #[test]
             fn $name() {
                 let (s, i, size, expected_bit_vec) = $value;
-                let rbv = RawBitVector::from_bit_string(&BitString::new(s));
+                let rbv = RawBitVector::from(BitString::new(s));
                 let copied_rbv = rbv.copy_sub(i, size);
 
                 assert_eq!(copied_rbv.length(), expected_bit_vec.len() as u64);
@@ -645,7 +647,7 @@ mod copy_sub_failure_tests {
             #[should_panic]
             fn $name() {
                 let (s, i, size) = $value;
-                let rbv = RawBitVector::from_bit_string(&BitString::new(s));
+                let rbv = RawBitVector::from(BitString::new(s));
                 let _ = rbv.copy_sub(i, size);
             }
         )*
@@ -690,7 +692,7 @@ mod copy_sub_fuzzing_tests {
         for _ in 0..samples {
             let s = &format!("{:b}", rand::random::<u16>());
             let bs = BitString::new(s);
-            let rbv = RawBitVector::from_bit_string(&bs);
+            let rbv = RawBitVector::from(bs);
 
             for i in 0..s.len() {
                 for size in 1..(s.len() - i) {
@@ -698,7 +700,7 @@ mod copy_sub_fuzzing_tests {
 
                     let substr = sub_str(s, i as u64, size as u64);
                     let substr_bs = BitString::new(&substr);
-                    let substr_rbv = RawBitVector::from_bit_string(&substr_bs);
+                    let substr_rbv = RawBitVector::from(substr_bs);
 
                     assert_eq!(copied_rbv, substr_rbv,
                         "\nbit vector = {}, RawBitVector::copy_sub(i={}, size={});\nActual:   {}\nExpected: {}",
@@ -720,7 +722,7 @@ mod as_u32_success_tests {
             #[test]
             fn $name() {
                 let (s, expected_u32) = $value;
-                let rbv = RawBitVector::from_bit_string(&BitString::new(s));
+                let rbv = RawBitVector::from(BitString::new(s));
                 assert_eq!(rbv.as_u32(), expected_u32);
             }
         )*
@@ -747,7 +749,7 @@ mod as_u32_failure_tests {
     #[should_panic]
     fn test() {
         let s = "00000000_11111111_00000000_11111111_0";
-        let rbv = RawBitVector::from_bit_string(&BitString::new(s));
+        let rbv = RawBitVector::from(BitString::new(s));
         let _ = rbv.as_u32();
     }
 }
