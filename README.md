@@ -1,4 +1,5 @@
 # fid-rs
+test travis_terminate
 
 High performance FID (Fully Indexable Dictionary) library.
 
