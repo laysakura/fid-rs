@@ -82,10 +82,10 @@ When the length of a `Fid` is _N_:
 |-----------|-----------------|------------------|
 | [Fid::from::<&str>()](https://laysakura.github.io/fid-rs/fid_rs/fid/struct.Fid.html#implementations) | _O(N)_ | _N + o(N)_ |
 | [Fid::access()](https://laysakura.github.io/fid-rs/fid_rs/fid/struct.Fid.html#method.access) | _O(1)_ | _0_ |
-| [Fid::rank()](https://laysakura.github.io/fid-rs/fid_rs/fid/struct.Fid.html#method.rank) | _O(1)_ | _O(log N_ |
-| [Fid::rank0()](https://laysakura.github.io/fid-rs/fid_rs/fid/struct.Fid.html#method.rank0) | _O(1)_ | _O(log N_ |
-| [Fid::select()](https://laysakura.github.io/fid-rs/fid_rs/fid/struct.Fid.html#method.select) | _O(log N)_ | _O(log N_ |
-| [Fid::select0()](https://laysakura.github.io/fid-rs/fid_rs/fid/struct.Fid.html#method.select0) | _O(log N)_ | _O(log N_ |
+| [Fid::rank()](https://laysakura.github.io/fid-rs/fid_rs/fid/struct.Fid.html#method.rank) | _O(1)_ | _O(log N)_ |
+| [Fid::rank0()](https://laysakura.github.io/fid-rs/fid_rs/fid/struct.Fid.html#method.rank0) | _O(1)_ | _O(log N)_ |
+| [Fid::select()](https://laysakura.github.io/fid-rs/fid_rs/fid/struct.Fid.html#method.select) | _O(log N)_ | _O(log N)_ |
+| [Fid::select0()](https://laysakura.github.io/fid-rs/fid_rs/fid/struct.Fid.html#method.select0) | _O(log N)_ | _O(log N)_ |
 
 (Actually, `select()`'s time-complexity can be _O(1)_ with complex implementation but fid-rs, like many other libraries, uses binary search of `rank()`'s result).
 
