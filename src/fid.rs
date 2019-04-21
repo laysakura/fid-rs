@@ -3,11 +3,9 @@ mod blocks;
 mod chunk;
 mod chunks;
 mod fid;
-mod fid_builder;
 
 use super::internal_data_structure::popcount_table::PopcountTable;
 use super::internal_data_structure::raw_bit_vector::RawBitVector;
-use std::collections::HashSet;
 
 /// FID (Fully Indexable Dictionary).
 ///
@@ -108,16 +106,6 @@ pub struct Fid {
 
     /// Table to calculate inner-block `rank()` in _O(1)_.
     table: PopcountTable,
-}
-
-/// Builder of [Fid](struct.Fid.html).
-pub struct FidBuilder {
-    seed: FidSeed,
-    bits_set: HashSet<u64>,
-}
-
-enum FidSeed {
-    Length(u64),
 }
 
 /// Collection of Chunk.

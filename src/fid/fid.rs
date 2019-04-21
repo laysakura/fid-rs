@@ -248,12 +248,12 @@ mod access_success_tests {
 
 #[cfg(test)]
 mod access_failure_tests {
-    use super::super::FidBuilder;
+    use crate::Fid;
 
     #[test]
     #[should_panic]
     fn over_upper_bound() {
-        let fid = FidBuilder::from_length(2).build();
+        let fid = Fid::from("00");
         let _ = fid.access(2);
     }
 }
@@ -321,12 +321,12 @@ mod rank_success_tests {
 
 #[cfg(test)]
 mod rank_failure_tests {
-    use super::super::FidBuilder;
+    use crate::Fid;
 
     #[test]
     #[should_panic]
     fn rank_over_upper_bound() {
-        let fid = FidBuilder::from_length(2).build();
+        let fid = Fid::from("00");
         let _ = fid.rank(2);
     }
 }
@@ -377,12 +377,12 @@ mod rank0_success_tests {
 
 #[cfg(test)]
 mod rank0_0_failure_tests {
-    use super::super::FidBuilder;
+    use crate::Fid;
 
     #[test]
     #[should_panic]
     fn rank0_over_upper_bound() {
-        let fid = FidBuilder::from_length(2).build();
+        let fid = Fid::from("00");
         let _ = fid.rank0(2);
     }
 }
@@ -394,12 +394,12 @@ mod select_success_tests {
 
 #[cfg(test)]
 mod select_failure_tests {
-    use super::super::FidBuilder;
+    use crate::Fid;
 
     #[test]
     #[should_panic]
     fn select_over_max_rank() {
-        let fid = FidBuilder::from_length(2).build();
+        let fid = Fid::from("00");
         let _ = fid.select(3);
     }
 }
@@ -411,12 +411,12 @@ mod select0_success_tests {
 
 #[cfg(test)]
 mod select0_failure_tests {
-    use super::super::FidBuilder;
+    use crate::Fid;
 
     #[test]
     #[should_panic]
     fn select_over_max_rank() {
-        let fid = FidBuilder::from_length(2).build();
+        let fid = Fid::from("00");
         let _ = fid.select0(3);
     }
 }
