@@ -27,5 +27,5 @@ cargo readme > /dev/null || cargo install cargo-readme  # skip if already availa
     git push origin ${TRAVIS_PULL_REQUEST_BRANCH}
 
     ### Stop build if anything updated in remote
-    [ $committed -eq 1 ] && exit 1 || :
+    [ $committed -eq 1 ] && travis_terminate 1 || :
 )
