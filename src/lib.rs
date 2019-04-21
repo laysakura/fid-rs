@@ -14,15 +14,6 @@
 //! [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/laysakura/fid-rs/blob/master/LICENSE-MIT)
 //! [![License: Apache 2.0](https://img.shields.io/badge/license-Apache_2.0-blue.svg)](https://github.com/laysakura/fid-rs/blob/master/LICENSE-APACHE)
 //!
-//! # Table of Contents
-//! - [Table of Contents](#table-of-contents)
-//!   - [Quickstart](#quickstart)
-//!   - [Features](#features)
-//!   - [Versions](#versions)
-//!   - [Roadmap](#roadmap)
-//!   - [Contributing](#contributing)
-//!   - [License](#license)
-//!
 //! # Quickstart
 //!
 //! To use fid-rs, add the following to your `Cargo.toml` file:
@@ -92,35 +83,6 @@
 //! | Space-complexity | _N + o(N)_                                             | _0_        | _O(log N)_   | _O(log N)_     |
 //!
 //! (Actually, `select()`'s time-complexity can be _O(1)_ with complex implementation but fid-rs, like many other libraries, uses binary search of `rank()`'s result).
-//!
-//! # Versions
-//! fid-rs uses [semantic versioning](http://semver.org/spec/v2.0.0.html).
-//!
-//! Since current major version is _0_, minor version update might involve breaking public API change (although it is carefully avoided).
-//!
-//! ## Rust Version Supports
-//!
-//! fid-rs is continuously tested with these Rust versions in Travis CI:
-//!
-//! - 1.33.0
-//! - Latest stable version
-//! - Beta version
-//! - Nightly build
-//!
-//! So it expectedly works with Rust 1.33.0 and any newer versions.
-//!
-//! Older versions may also work, but are not tested or guaranteed.
-//!
-//! # Contributing
-//!
-//! Any kind of pull requests are appreciated.
-//!
-//! Currently, there are not many rules for contribution.
-//! But at least your pull requests must pass Travis CI.
-//!
-//! # License
-//!
-//! fid-rs is dual licensed under the Apache 2.0 license and the MIT license.
 
 pub use bit_string::BitString;
 pub use fid::{Fid, FidBuilder};
