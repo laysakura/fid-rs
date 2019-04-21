@@ -21,6 +21,19 @@ impl From<BitString> for RawBitVector {
     }
 }
 
+impl From<&[bool]> for RawBitVector {
+    /// Makes a bit vector from slice of boolean.
+    fn from(bits: &[bool]) -> RawBitVector {
+        let mut rbv = RawBitVector::from_length(bits.len() as u64);
+        for (i, bit) in bits.iter().enumerate() {
+            if *bit {
+                rbv.set_bit(i as u64);
+            };
+        }
+        rbv
+    }
+}
+
 impl RawBitVector {
     /// Makes a bit vector of `length`, willed with 0.
     ///

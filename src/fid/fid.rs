@@ -4,7 +4,7 @@ use crate::internal_data_structure::popcount_table::PopcountTable;
 use crate::internal_data_structure::raw_bit_vector::RawBitVector;
 
 impl From<&str> for Fid {
-    /// Provides validated string representation of bit sequence.
+    /// Constructor from string representation of bit sequence.
     ///
     /// - '0' is interpreted as _0_.
     /// - '1' is interpreted as _1_.
@@ -28,6 +28,30 @@ impl From<&str> for Fid {
     fn from(s: &str) -> Fid {
         let bs = BitString::new(s);
         let rbv = RawBitVector::from(bs);
+        Fid::from(rbv)
+    }
+}
+
+impl From<&[bool]> for Fid {
+    /// Constructor from slice of boolean.
+    ///
+    /// # Examples
+    /// ```
+    /// use fid_rs::Fid;
+    ///
+    /// let fid = Fid::from(&[false, true, true, true]);
+    /// assert_eq!(fid.access(0), false);
+    /// assert_eq!(fid.access(1), true);
+    /// assert_eq!(fid.access(2), true);
+    /// assert_eq!(fid.access(3), true);
+    /// ```
+    ///
+    /// # Panics
+    /// When:
+    /// - `s` contains any character other than '0', '1', and '_'.
+    /// - `s` does not contain any '0' or '1'
+    fn from(bits: &[bool]) -> Fid {
+        let rbv = RawBitVector::from(bits);
         Fid::from(rbv)
     }
 }
@@ -239,6 +263,45 @@ mod from_str_success_tests {
 #[cfg(test)]
 mod from_str_failure_tests {
     // well-tested in BitString::new()
+}
+
+#[cfg(test)]
+mod from_slice_success_tests {
+    use crate::Fid;
+
+    macro_rules! parameterized_tests {
+        ($($name:ident: $value:expr,)*) => {
+        $(
+            #[test]
+            fn $name() {
+                let arr = $value;
+                let fid = Fid::from(&arr[..]);
+
+                // TODO length check
+                // assert_eq!(fid.length(), expected_bits);
+                for (i, bit) in arr.iter().enumerate() {
+                    assert_eq!(fid.access(i as u64), *bit);
+                }
+            }
+        )*
+        }
+    }
+
+    parameterized_tests! {
+        t1: [false],
+        t2: [true],
+        t3: [false, false],
+        t4: [false, true],
+        t5: [true, false],
+        t6: [true, true],
+        t7: [false; 100],
+        t8: [true; 100],
+    }
+}
+
+#[cfg(test)]
+mod from_slice_failure_tests {
+    // nothing to test
 }
 
 #[cfg(test)]
