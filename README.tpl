@@ -1,4 +1,5 @@
 # {{crate}}
+test travis_terminate
 
 {{readme}}
 
