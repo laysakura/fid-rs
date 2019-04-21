@@ -1,4 +1,5 @@
 use super::{Blocks, Chunks, Fid};
+use crate::internal_data_structure::bit_string::BitString;
 use crate::internal_data_structure::popcount_table::PopcountTable;
 use crate::internal_data_structure::raw_bit_vector::RawBitVector;
 
@@ -25,18 +26,7 @@ impl From<&str> for Fid {
     /// - `s` contains any character other than '0', '1', and '_'.
     /// - `s` does not contain any '0' or '1'
     fn from(s: &str) -> Fid {
-        let parsed: String = s
-            .chars()
-            .filter(|c| match c {
-                '0' | '1' => true,
-                '_' => false,
-                _ => panic!("`s` must consist of '0' or '1'. '{}' included.", c),
-            })
-            .collect();
-        assert!(!parsed.is_empty(), "`str` must contain any '0' or '1'.");
-
-        // TODO stop using BitString
-        let bs = crate::BitString::new(&parsed);
+        let bs = BitString::new(s);
         let rbv = RawBitVector::from_bit_string(&bs);
         Fid::from(rbv)
     }
@@ -248,34 +238,7 @@ mod from_str_success_tests {
 
 #[cfg(test)]
 mod from_str_failure_tests {
-    use crate::Fid;
-
-    macro_rules! parameterized_tests {
-        ($($name:ident: $value:expr,)*) => {
-        $(
-            #[test]
-            #[should_panic]
-            fn $name() {
-                let s = $value;
-                Fid::from(s);
-            }
-        )*
-        }
-    }
-
-    parameterized_tests! {
-        t0: "",
-        t1: " ",
-        t2: " 0",
-        t3: "0 ",
-        t4: "1 0",
-        t5: "０",
-        t6: "１",
-        t7: "012",
-        t8: "01二",
-        t9: "_____",
-    }
-
+    // well-tested in BitString::new()
 }
 
 #[cfg(test)]
@@ -298,7 +261,7 @@ mod access_failure_tests {
 #[cfg(test)]
 #[allow(non_snake_case)]
 mod rank_success_tests {
-    use super::super::{BitString, FidBuilder};
+    use crate::Fid;
 
     macro_rules! parameterized_tests {
         ($($name:ident: $value:expr,)*) => {
@@ -307,9 +270,9 @@ mod rank_success_tests {
             fn $name() {
                 let (in_bv_str, in_i, expected_rank) = $value;
                 assert_eq!(
-                    FidBuilder::from_bit_string(BitString::new(in_bv_str))
-                        .build().rank(in_i),
-                    expected_rank);
+                    Fid::from(in_bv_str).rank(in_i),
+                    expected_rank
+                );
             }
         )*
         }
@@ -371,7 +334,7 @@ mod rank_failure_tests {
 #[cfg(test)]
 #[allow(non_snake_case)]
 mod rank0_success_tests {
-    use super::super::{BitString, FidBuilder};
+    use crate::Fid;
 
     macro_rules! parameterized_tests {
         ($($name:ident: $value:expr,)*) => {
@@ -380,9 +343,9 @@ mod rank0_success_tests {
             fn $name() {
                 let (in_bv_str, in_i, expected_rank0) = $value;
                 assert_eq!(
-                    FidBuilder::from_bit_string(BitString::new(in_bv_str))
-                        .build().rank0(in_i),
-                    expected_rank0);
+                    Fid::from(in_bv_str).rank0(in_i),
+                    expected_rank0
+                );
             }
         )*
         }

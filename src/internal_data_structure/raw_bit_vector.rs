@@ -1,4 +1,4 @@
-use crate::BitString;
+use crate::internal_data_structure::bit_string::BitString;
 use std::fmt;
 
 #[derive(PartialEq, Eq, Debug)]
@@ -285,8 +285,8 @@ mod from_length_failure_tests {
 
 #[cfg(test)]
 mod from_bit_string_success_tests {
+    use super::super::bit_string::BitString;
     use super::RawBitVector;
-    use crate::BitString;
 
     struct IndexBitPair(u64, bool);
 
@@ -476,8 +476,8 @@ mod popcount_failure_tests {
 
 #[cfg(test)]
 mod set_bit_success_tests {
+    use super::super::bit_string::BitString;
     use super::RawBitVector;
-    use crate::BitString;
 
     struct IndexBitPair(u64, bool);
 

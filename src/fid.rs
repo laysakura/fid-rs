@@ -5,7 +5,6 @@ mod chunks;
 mod fid;
 mod fid_builder;
 
-use super::bit_string::BitString;
 use super::internal_data_structure::popcount_table::PopcountTable;
 use super::internal_data_structure::raw_bit_vector::RawBitVector;
 use std::collections::HashSet;
@@ -166,7 +165,6 @@ pub struct FidBuilder {
 
 enum FidSeed {
     Length(u64),
-    BitStr(BitString),
 }
 
 /// Collection of Chunk.

@@ -1,4 +1,4 @@
-use super::{BitString, Blocks, Chunks, Fid, FidBuilder, FidSeed};
+use super::{Blocks, Chunks, Fid, FidBuilder, FidSeed};
 use crate::internal_data_structure::popcount_table::PopcountTable;
 use crate::internal_data_structure::raw_bit_vector::RawBitVector;
 use std::collections::HashSet;
@@ -8,14 +8,6 @@ impl super::FidBuilder {
     pub fn from_length(length: u64) -> Self {
         Self {
             seed: FidSeed::Length(length),
-            bits_set: HashSet::new(),
-        }
-    }
-
-    /// Prepares a bit vector from [BitString](struct.BitString.html) representation.
-    pub fn from_bit_string(bs: BitString) -> FidBuilder {
-        FidBuilder {
-            seed: FidSeed::BitStr(bs),
             bits_set: HashSet::new(),
         }
     }
@@ -46,7 +38,6 @@ impl super::FidBuilder {
         }
         self.seed = match &self.seed {
             FidSeed::Length(n) => FidSeed::Length(n + 1),
-            FidSeed::BitStr(bs) => FidSeed::BitStr(BitString::new(&format!("{}0", bs.str()))),
         };
         self
     }
@@ -60,7 +51,6 @@ impl super::FidBuilder {
 
         let mut rbv = match &self.seed {
             FidSeed::Length(n) => RawBitVector::from_length(*n),
-            FidSeed::BitStr(bs) => RawBitVector::from_bit_string(bs),
         };
         for bit in &self.bits_set {
             rbv.set_bit(*bit)
@@ -74,7 +64,6 @@ impl super::FidBuilder {
     fn current_length(&self) -> u64 {
         match &self.seed {
             FidSeed::Length(n) => *n,
-            FidSeed::BitStr(bs) => bs.str().len() as u64,
         }
     }
 }
@@ -154,110 +143,6 @@ mod builder_from_length_failure_tests {
         let _ = FidBuilder::from_length(0).build();
     }
 }
-#[cfg(test)]
-mod set_bit_success_tests {
-    use super::{BitString, FidBuilder};
-
-    struct IndexBitPair(u64, bool);
-
-    macro_rules! parameterized_tests {
-        ($($name:ident: $value:expr,)*) => {
-        $(
-            #[test]
-            fn $name() {
-                let (in_s, bits_to_set, index_bit_pairs) = $value;
-                let mut builder = FidBuilder::from_bit_string(BitString::new(in_s));
-
-                for i in bits_to_set { builder.set_bit(i); }
-                let bv = builder.build();
-
-                for IndexBitPair(i, bit) in index_bit_pairs {
-                    assert_eq!(bv.access(i), bit);
-                }
-            }
-        )*
-        }
-    }
-
-    parameterized_tests! {
-        t1_1: ("0", vec!(),
-               vec!(
-                    IndexBitPair(0, false),
-                   )),
-        t1_2: ("0", vec!(0),
-               vec!(
-                    IndexBitPair(0, true),
-                   )),
-        t1_3: ("0", vec!(0, 0),
-               vec!(
-                    IndexBitPair(0, true),
-                   )),
-        t1_4: ("1", vec!(0),
-               vec!(
-                    IndexBitPair(0, true),
-                   )),
-
-        t8_1: ("00000000", vec!(),
-               vec!(
-                    IndexBitPair(0, false),
-                    IndexBitPair(1, false),
-                    IndexBitPair(2, false),
-                    IndexBitPair(3, false),
-                    IndexBitPair(4, false),
-                    IndexBitPair(5, false),
-                    IndexBitPair(6, false),
-                    IndexBitPair(7, false),
-                   )),
-        t8_2: ("00000000", vec!(0, 2, 4, 6),
-               vec!(
-                    IndexBitPair(0, true),
-                    IndexBitPair(1, false),
-                    IndexBitPair(2, true),
-                    IndexBitPair(3, false),
-                    IndexBitPair(4, true),
-                    IndexBitPair(5, false),
-                    IndexBitPair(6, true),
-                    IndexBitPair(7, false),
-                   )),
-
-        t9_1: ("000000000", vec!(),
-               vec!(
-                    IndexBitPair(0, false),
-                    IndexBitPair(1, false),
-                    IndexBitPair(2, false),
-                    IndexBitPair(3, false),
-                    IndexBitPair(4, false),
-                    IndexBitPair(5, false),
-                    IndexBitPair(6, false),
-                    IndexBitPair(7, false),
-                    IndexBitPair(8, false),
-                   )),
-        t9_2: ("000000000", vec!(0, 2, 4, 6, 8),
-               vec!(
-                    IndexBitPair(0, true),
-                    IndexBitPair(1, false),
-                    IndexBitPair(2, true),
-                    IndexBitPair(3, false),
-                    IndexBitPair(4, true),
-                    IndexBitPair(5, false),
-                    IndexBitPair(6, true),
-                    IndexBitPair(7, false),
-                    IndexBitPair(8, true),
-                   )),
-    }
-}
-
-#[cfg(test)]
-mod builder_set_bit_failure_tests {
-    use super::FidBuilder;
-
-    #[test]
-    #[should_panic]
-    fn set_bit_over_upper_bound() {
-        let _ = FidBuilder::from_length(2).set_bit(2).build();
-    }
-}
-
 #[cfg(test)]
 mod add_bit_success_tests {
     use crate::FidBuilder;

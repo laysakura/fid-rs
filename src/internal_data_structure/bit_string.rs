@@ -19,83 +19,77 @@
 /// When:
 /// - `s` contains any character other than '0', '1', and '_'.
 /// - `s` does not contain any '0' or '1'
-pub struct BitString {
-    s: String,
-}
+pub struct BitString(String);
 
 impl BitString {
     /// Constructor.
     pub fn new(s: &str) -> BitString {
-        let parsed = s
+        let parsed: String = s
             .chars()
             .filter(|c| match c {
-                '0' => true,
-                '1' => true,
+                '0' | '1' => true,
                 '_' => false,
                 _ => panic!("`str` must consist of '0' or '1'. '{}' included.", c),
             })
-            .collect::<String>();
-
+            .collect();
         assert!(!parsed.is_empty(), "`str` must contain any '0' or '1'.");
 
-        BitString {
-            s: String::from(parsed),
-        }
+        BitString(String::from(parsed))
     }
 
     /// Getter.
     pub fn str(&self) -> &str {
-        &self.s
+        &self.0
     }
 }
 
 #[cfg(test)]
 mod new_success_tests {
-    use super::super::BitString;
+    use super::BitString;
 
-    macro_rules! parameterized_from_valid_str_tests {
+    macro_rules! parameterized_tests {
         ($($name:ident: $value:expr,)*) => {
         $(
             #[test]
             fn $name() {
-                let (in_s, expected_str) = $value;
-                let bvs = BitString::new(in_s);
-                assert_eq!(bvs.str(), expected_str);
+                let (s, expected_str) = $value;
+                let bs = BitString::new(s);
+                assert_eq!(bs.str(), expected_str);
             }
         )*
         }
     }
 
-    parameterized_from_valid_str_tests! {
+    parameterized_tests! {
         s1: ("0", "0"),
         s2: ("1", "1"),
         s3: ("00", "00"),
         s4: ("01", "01"),
         s5: ("10", "10"),
         s6: ("11", "11"),
-        s7_1: ("01010101010111001000001", "01010101010111001000001"),
-        s7_2: ("01010101_01011100_1000001", "01010101010111001000001"),
+        s7: ("01010101010111001000001", "01010101010111001000001"),
+        s8: ("01010101_01011100_1000001", "01010101010111001000001"),
     }
 }
 
 #[cfg(test)]
 mod new_failure_tests {
-    use super::super::BitString;
+    use super::BitString;
 
-    macro_rules! parameterized_from_invalid_str_tests {
+    macro_rules! parameterized_tests {
         ($($name:ident: $value:expr,)*) => {
         $(
             #[test]
             #[should_panic]
             fn $name() {
-                let in_s = $value;
-                let _ = BitString::new(in_s);
+                let s = $value;
+                let _ = BitString::new(s);
             }
         )*
         }
     }
 
-    parameterized_from_invalid_str_tests! {
+    parameterized_tests! {
         s0: "",
         s1: " ",
         s2: " 0",
