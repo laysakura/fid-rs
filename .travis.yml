@@ -13,6 +13,11 @@ branches:
     - /^v[0-9]/  # tag
 cache: cargo
 
+stages:
+  - pr-check-fix
+  - test
+  - doc-bench-deploy
+
 jobs:
   include:
     - stage: pr-check-fix
