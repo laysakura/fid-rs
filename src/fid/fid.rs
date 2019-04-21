@@ -206,12 +206,12 @@ mod from_str_success_tests {
             #[test]
             fn $name() {
                 let (s, expected_bits) = $value;
-                let bv = Fid::from(s);
+                let fid = Fid::from(s);
 
                 // TODO length check
-                // assert_eq!(bv.length(), expected_bits);
+                // assert_eq!(fid.length(), expected_bits);
                 for (i, bit) in expected_bits.iter().enumerate() {
-                    assert_eq!(bv.access(i as u64), *bit);
+                    assert_eq!(fid.access(i as u64), *bit);
                 }
             }
         )*
@@ -253,8 +253,8 @@ mod access_failure_tests {
     #[test]
     #[should_panic]
     fn over_upper_bound() {
-        let bv = FidBuilder::from_length(2).build();
-        let _ = bv.access(2);
+        let fid = FidBuilder::from_length(2).build();
+        let _ = fid.access(2);
     }
 }
 
@@ -268,9 +268,9 @@ mod rank_success_tests {
         $(
             #[test]
             fn $name() {
-                let (in_bv_str, in_i, expected_rank) = $value;
+                let (in_fid_str, in_i, expected_rank) = $value;
                 assert_eq!(
-                    Fid::from(in_bv_str).rank(in_i),
+                    Fid::from(in_fid_str).rank(in_i),
                     expected_rank
                 );
             }
@@ -326,8 +326,8 @@ mod rank_failure_tests {
     #[test]
     #[should_panic]
     fn rank_over_upper_bound() {
-        let bv = FidBuilder::from_length(2).build();
-        let _ = bv.rank(2);
+        let fid = FidBuilder::from_length(2).build();
+        let _ = fid.rank(2);
     }
 }
 
@@ -341,9 +341,9 @@ mod rank0_success_tests {
         $(
             #[test]
             fn $name() {
-                let (in_bv_str, in_i, expected_rank0) = $value;
+                let (in_fid_str, in_i, expected_rank0) = $value;
                 assert_eq!(
-                    Fid::from(in_bv_str).rank0(in_i),
+                    Fid::from(in_fid_str).rank0(in_i),
                     expected_rank0
                 );
             }
@@ -382,8 +382,8 @@ mod rank0_0_failure_tests {
     #[test]
     #[should_panic]
     fn rank0_over_upper_bound() {
-        let bv = FidBuilder::from_length(2).build();
-        let _ = bv.rank0(2);
+        let fid = FidBuilder::from_length(2).build();
+        let _ = fid.rank0(2);
     }
 }
 
@@ -399,8 +399,8 @@ mod select_failure_tests {
     #[test]
     #[should_panic]
     fn select_over_max_rank() {
-        let bv = FidBuilder::from_length(2).build();
-        let _ = bv.select(3);
+        let fid = FidBuilder::from_length(2).build();
+        let _ = fid.select(3);
     }
 }
 
@@ -416,7 +416,7 @@ mod select0_failure_tests {
     #[test]
     #[should_panic]
     fn select_over_max_rank() {
-        let bv = FidBuilder::from_length(2).build();
-        let _ = bv.select0(3);
+        let fid = FidBuilder::from_length(2).build();
+        let _ = fid.select0(3);
     }
 }

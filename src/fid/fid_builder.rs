@@ -80,9 +80,9 @@ mod builder_from_length_success_tests {
             #[test]
             fn $name() {
                 let (in_length, index_bit_pairs) = $value;
-                let bv = FidBuilder::from_length(in_length).build();
+                let fid = FidBuilder::from_length(in_length).build();
                 for IndexBitPair(i, bit) in index_bit_pairs {
-                    assert_eq!(bv.access(i), bit);
+                    assert_eq!(fid.access(i), bit);
                 }
             }
         )*
@@ -158,10 +158,10 @@ mod add_bit_success_tests {
                 let mut builder = FidBuilder::from_length(init_length);
 
                 for i in bits_to_add { builder.add_bit(i); }
-                let bv = builder.build();
+                let fid = builder.build();
 
                 for IndexBitPair(i, bit) in index_bit_pairs {
-                    assert_eq!(bv.access(i), bit);
+                    assert_eq!(fid.access(i), bit);
                 }
             }
         )*
