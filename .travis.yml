@@ -13,14 +13,19 @@ branches:
     - /^v[0-9]/  # tag
 cache: cargo
 
-# before_script:
-#   - ./ci/before_script.sh
-script:
-  - ./ci/script.sh
-
 jobs:
   include:
-    - stage: Only in a representative env
+    - stage: pr-check-fix
+      rust: stable
+      os: linux
+      script: ./ci/pr-check-fix.sh
+
+    - stage: test
+      script:
+        - cargo build --release --verbose --all
+        - cargo test --release --verbose --all
+
+    - stage: doc-bench-deploy
       rust: stable
       os: linux
 
