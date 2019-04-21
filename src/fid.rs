@@ -172,6 +172,7 @@ enum FidSeed {
 /// Collection of Chunk.
 struct Chunks {
     chunks: Vec<Chunk>,
+
     chunks_cnt: u64,
 }
 
