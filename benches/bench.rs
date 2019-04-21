@@ -29,7 +29,7 @@ mod fid {
     pub fn from_str_benchmark(_: &mut Criterion) {
         super::c().bench_function_over_inputs(
             &format!(
-                "[{}] FidBuilder::from_bit_string(\"00...(repeated N-times)\").build()",
+                "[{}] Fid::from(\"00...(repeated N-times)\")",
                 super::git_hash()
             ),
             |b, &&n| {
@@ -43,108 +43,128 @@ mod fid {
         );
     }
 
-    // TODO after implementation of from::<bool>()
-    // pub fn rank_benchmark(_: &mut Criterion) {
-    //     let times = 1_000_000;
+    pub fn from_slice_benchmark(_: &mut Criterion) {
+        super::c().bench_function_over_inputs(
+            &format!("[{}] Fid::from(&[false; N])", super::git_hash()),
+            |b, &&n| {
+                b.iter_batched(
+                    || vec![false; n as usize],
+                    |v| Fid::from(&v[..]),
+                    BatchSize::SmallInput,
+                )
+            },
+            &NS,
+        );
+    }
 
-    //     super::c().bench_function_over_inputs(
-    //         &format!("[{}] Fid::rank(N) {} times", super::git_hash(), times),
-    //         move |b, &&n| {
-    //             b.iter_batched(
-    //                 || FidBuilder::from_length(n).build(),
-    //                 |fid| {
-    //                     // iter_batched() does not properly time `routine` time when `setup` time is far longer than `routine` time.
-    //                     // Tested function takes too short compared to build(). So loop many times.
-    //                     for _ in 0..times {
-    //                         assert_eq!(fid.rank(n - 1), 0);
-    //                     }
-    //                 },
-    //                 BatchSize::SmallInput,
-    //             )
-    //         },
-    //         &NS,
-    //     );
-    // }
+    pub fn rank_benchmark(_: &mut Criterion) {
+        let times = 1_000_000;
 
-    // pub fn select_benchmark(_: &mut Criterion) {
-    //     let times = 1_000;
+        super::c().bench_function_over_inputs(
+            &format!("[{}] Fid::rank(N) {} times", super::git_hash(), times),
+            move |b, &&n| {
+                b.iter_batched(
+                    || {
+                        let v = vec![false; n as usize];
+                        Fid::from(&v[..])
+                    },
+                    |fid| {
+                        // iter_batched() does not properly time `routine` time when `setup` time is far longer than `routine` time.
+                        // Tested function takes too short compared to build(). So loop many times.
+                        for _ in 0..times {
+                            assert_eq!(fid.rank(n - 1), 0);
+                        }
+                    },
+                    BatchSize::SmallInput,
+                )
+            },
+            &NS,
+        );
+    }
 
-    //     super::c().bench_function_over_inputs(
-    //         &format!("[{}] Fid::select(N) {} times", super::git_hash(), times),
-    //         move |b, &&n| {
-    //             b.iter_batched(
-    //                 || {
-    //                     let mut builder = FidBuilder::from_length(n);
-    //                     for i in 0..n {
-    //                         builder.set_bit(i);
-    //                     }
-    //                     builder.build()
-    //                 },
-    //                 |fid| {
-    //                     // iter_batched() does not properly time `routine` time when `setup` time is far longer than `routine` time.
-    //                     // Tested function takes too short compared to build(). So loop many times.
-    //                     for _ in 0..times {
-    //                         assert_eq!(fid.select(n - 1), Some(n - 2));
-    //                     }
-    //                 },
-    //                 BatchSize::SmallInput,
-    //             )
-    //         },
-    //         &NS,
-    //     );
-    // }
+    pub fn select_benchmark(_: &mut Criterion) {
+        let times = 1_000;
 
-    // pub fn rank0_benchmark(_: &mut Criterion) {
-    //     let times = 1_000_000;
+        super::c().bench_function_over_inputs(
+            &format!("[{}] Fid::select(N) {} times", super::git_hash(), times),
+            move |b, &&n| {
+                b.iter_batched(
+                    || {
+                        let v = vec![true; n as usize];
+                        Fid::from(&v[..])
+                    },
+                    |fid| {
+                        // iter_batched() does not properly time `routine` time when `setup` time is far longer than `routine` time.
+                        // Tested function takes too short compared to build(). So loop many times.
+                        for _ in 0..times {
+                            assert_eq!(fid.select(n - 1), Some(n - 2));
+                        }
+                    },
+                    BatchSize::SmallInput,
+                )
+            },
+            &NS,
+        );
+    }
 
-    //     super::c().bench_function_over_inputs(
-    //         &format!("[{}] Fid::rank0(N) {} times", super::git_hash(), times),
-    //         move |b, &&n| {
-    //             b.iter_batched(
-    //                 || FidBuilder::from_length(n).build(),
-    //                 |fid| {
-    //                     // iter_batched() does not properly time `routine` time when `setup` time is far longer than `routine` time.
-    //                     // Tested function takes too short compared to build(). So loop many times.
-    //                     for _ in 0..times {
-    //                         assert_eq!(fid.rank0(n - 1), n);
-    //                     }
-    //                 },
-    //                 BatchSize::SmallInput,
-    //             )
-    //         },
-    //         &NS,
-    //     );
-    // }
+    pub fn rank0_benchmark(_: &mut Criterion) {
+        let times = 1_000_000;
 
-    // pub fn select0_benchmark(_: &mut Criterion) {
-    //     let times = 1_000;
+        super::c().bench_function_over_inputs(
+            &format!("[{}] Fid::rank0(N) {} times", super::git_hash(), times),
+            move |b, &&n| {
+                b.iter_batched(
+                    || {
+                        let v = vec![false; n as usize];
+                        Fid::from(&v[..])
+                    },
+                    |fid| {
+                        // iter_batched() does not properly time `routine` time when `setup` time is far longer than `routine` time.
+                        // Tested function takes too short compared to build(). So loop many times.
+                        for _ in 0..times {
+                            assert_eq!(fid.rank0(n - 1), n);
+                        }
+                    },
+                    BatchSize::SmallInput,
+                )
+            },
+            &NS,
+        );
+    }
 
-    //     super::c().bench_function_over_inputs(
-    //         &format!("[{}] Fid::select0(N) {} times", super::git_hash(), times),
-    //         move |b, &&n| {
-    //             b.iter_batched(
-    //                 || FidBuilder::from_length(n).build(),
-    //                 |fid| {
-    //                     // iter_batched() does not properly time `routine` time when `setup` time is far longer than `routine` time.
-    //                     // Tested function takes too short compared to build(). So loop many times.
-    //                     for _ in 0..times {
-    //                         assert_eq!(fid.select0(n - 1), Some(n - 2));
-    //                     }
-    //                 },
-    //                 BatchSize::SmallInput,
-    //             )
-    //         },
-    //         &NS,
-    //     );
-    // }
+    pub fn select0_benchmark(_: &mut Criterion) {
+        let times = 1_000;
+
+        super::c().bench_function_over_inputs(
+            &format!("[{}] Fid::select0(N) {} times", super::git_hash(), times),
+            move |b, &&n| {
+                b.iter_batched(
+                    || {
+                        let v = vec![false; n as usize];
+                        Fid::from(&v[..])
+                    },
+                    |fid| {
+                        // iter_batched() does not properly time `routine` time when `setup` time is far longer than `routine` time.
+                        // Tested function takes too short compared to build(). So loop many times.
+                        for _ in 0..times {
+                            assert_eq!(fid.select0(n - 1), Some(n - 2));
+                        }
+                    },
+                    BatchSize::SmallInput,
+                )
+            },
+            &NS,
+        );
+    }
 }
 
 criterion_group!(
     benches,
     fid::from_str_benchmark,
-    // fid::rank_benchmark,
-    // fid::select_benchmark,
-    // fid::rank0_benchmark,
-    // fid::select0_benchmark,
+    fid::from_slice_benchmark,
+    fid::rank_benchmark,
+    fid::select_benchmark,
+    fid::rank0_benchmark,
+    fid::select0_benchmark,
 );
 criterion_main!(benches);
