@@ -85,7 +85,7 @@ impl RawBitVector {
         (self.byte_vec.len() as u64 - 1) * 8 + (self.last_byte_len as u64)
     }
 
-    /// Returns popcount of whole this Fid.
+    /// Returns popcount of whole this bit vector.
     pub fn popcount(&self) -> u64 {
         self.byte_vec
             .iter()

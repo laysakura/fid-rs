@@ -13,7 +13,7 @@ use std::collections::HashSet;
 ///
 /// This class can handle bit sequence of virtually **arbitrary length.**
 ///
-/// In fact, _N_ (bit vector's length) is designed to be limited to: _N <= 2^64_.<br>
+/// In fact, _N_ (FID's length) is designed to be limited to: _N <= 2^64_.<br>
 /// It should be enough for almost all usecases since a binary data of length of _2^64_ consumes _2^21 = 2,097,152_ TB (terabyte), which is hard to handle by state-of-the-art computer architecture.
 ///
 /// # Implementation detail

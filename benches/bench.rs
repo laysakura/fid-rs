@@ -59,11 +59,11 @@ mod fid {
             move |b, &&n| {
                 b.iter_batched(
                     || FidBuilder::from_length(n).build(),
-                    |bv| {
+                    |fid| {
                         // iter_batched() does not properly time `routine` time when `setup` time is far longer than `routine` time.
                         // Tested function takes too short compared to build(). So loop many times.
                         for _ in 0..times {
-                            assert_eq!(bv.rank(n - 1), 0);
+                            assert_eq!(fid.rank(n - 1), 0);
                         }
                     },
                     BatchSize::SmallInput,
@@ -87,11 +87,11 @@ mod fid {
                         }
                         builder.build()
                     },
-                    |bv| {
+                    |fid| {
                         // iter_batched() does not properly time `routine` time when `setup` time is far longer than `routine` time.
                         // Tested function takes too short compared to build(). So loop many times.
                         for _ in 0..times {
-                            assert_eq!(bv.select(n - 1), Some(n - 2));
+                            assert_eq!(fid.select(n - 1), Some(n - 2));
                         }
                     },
                     BatchSize::SmallInput,
@@ -109,11 +109,11 @@ mod fid {
             move |b, &&n| {
                 b.iter_batched(
                     || FidBuilder::from_length(n).build(),
-                    |bv| {
+                    |fid| {
                         // iter_batched() does not properly time `routine` time when `setup` time is far longer than `routine` time.
                         // Tested function takes too short compared to build(). So loop many times.
                         for _ in 0..times {
-                            assert_eq!(bv.rank0(n - 1), n);
+                            assert_eq!(fid.rank0(n - 1), n);
                         }
                     },
                     BatchSize::SmallInput,
@@ -131,11 +131,11 @@ mod fid {
             move |b, &&n| {
                 b.iter_batched(
                     || FidBuilder::from_length(n).build(),
-                    |bv| {
+                    |fid| {
                         // iter_batched() does not properly time `routine` time when `setup` time is far longer than `routine` time.
                         // Tested function takes too short compared to build(). So loop many times.
                         for _ in 0..times {
-                            assert_eq!(bv.select0(n - 1), Some(n - 2));
+                            assert_eq!(fid.select0(n - 1), Some(n - 2));
                         }
                     },
                     BatchSize::SmallInput,

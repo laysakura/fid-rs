@@ -2,20 +2,20 @@ use fid_rs::{Fid, FidBuilder};
 
 #[test]
 fn build_from_length() {
-    let bv = FidBuilder::from_length(2).build();
-    assert_eq!(bv.access(0), false);
-    assert_eq!(bv.access(1), false);
+    let fid = FidBuilder::from_length(2).build();
+    assert_eq!(fid.access(0), false);
+    assert_eq!(fid.access(1), false);
 }
 
 #[test]
 fn build_from_length_and_set_bit() {
-    let bv = FidBuilder::from_length(2)
+    let fid = FidBuilder::from_length(2)
         .set_bit(0)
         .set_bit(1)
         .set_bit(0)
         .build();
-    assert_eq!(bv.access(0), true);
-    assert_eq!(bv.access(1), true);
+    assert_eq!(fid.access(0), true);
+    assert_eq!(fid.access(1), true);
 }
 
 #[test]
