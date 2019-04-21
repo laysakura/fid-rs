@@ -87,7 +87,7 @@
 //!
 //! (Actually, `select()`'s time-complexity can be _O(1)_ with complex implementation but fid-rs, like many other libraries, uses binary search of `rank()`'s result).
 
-pub use fid::{Fid, FidBuilder};
+pub use fid::Fid;
 
 pub mod fid;
 mod internal_data_structure;
