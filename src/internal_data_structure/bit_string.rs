@@ -4,17 +4,6 @@
 /// '1' is interpreted as _1_.
 /// '_' is just ignored.
 ///
-/// # Examples
-/// ```
-/// use fid_rs::BitString;
-///
-/// let bs = BitString::new("01");
-/// assert_eq!(bs.str(), "01");
-///
-/// let bs = BitString::new("0111_0101");
-/// assert_eq!(bs.str(), "01110101");
-/// ```
-///
 /// # Panics
 /// When:
 /// - `s` contains any character other than '0', '1', and '_'.

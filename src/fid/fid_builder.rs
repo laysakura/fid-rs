@@ -1,4 +1,4 @@
-use super::{Blocks, Chunks, Fid, FidBuilder, FidSeed};
+use super::{Blocks, Chunks, Fid, FidSeed};
 use crate::internal_data_structure::popcount_table::PopcountTable;
 use crate::internal_data_structure::raw_bit_vector::RawBitVector;
 use std::collections::HashSet;
@@ -70,7 +70,7 @@ impl super::FidBuilder {
 
 #[cfg(test)]
 mod builder_from_length_success_tests {
-    use super::FidBuilder;
+    use super::super::FidBuilder;
 
     struct IndexBitPair(u64, bool);
 
@@ -135,7 +135,7 @@ mod builder_from_length_success_tests {
 
 #[cfg(test)]
 mod builder_from_length_failure_tests {
-    use super::FidBuilder;
+    use super::super::FidBuilder;
 
     #[test]
     #[should_panic]

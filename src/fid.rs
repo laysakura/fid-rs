@@ -16,53 +16,6 @@ use std::collections::HashSet;
 /// In fact, _N_ (bit vector's length) is designed to be limited to: _N <= 2^64_.<br>
 /// It should be enough for almost all usecases since a binary data of length of _2^64_ consumes _2^21 = 2,097,152_ TB (terabyte), which is hard to handle by state-of-the-art computer architecture.
 ///
-/// # Examples
-/// ```
-/// extern crate fid_rs;
-///
-/// use fid_rs::{BitString, FidBuilder};
-///
-/// // Construction -------------------------
-/// // `01001` built by `from_bit_string()`
-/// let bv = FidBuilder::from_bit_string(BitString::new("0100_1")).build();  // Tips: BitString::new() ignores '_'.
-///
-/// // `01001` built by `from_length()` and `add_bit()`
-/// let bv = FidBuilder::from_length(0)
-///     .add_bit(false)
-///     .add_bit(true)
-///     .add_bit(false)
-///     .add_bit(false)
-///     .add_bit(true)
-///     .build();
-///
-/// // Basic operations ---------------------
-/// assert_eq!(bv.access(0), false);  // [0]1001; 0th bit is '0' (false)
-/// assert_eq!(bv.access(1), true);   // 0[1]001; 1st bit is '1' (true)
-/// assert_eq!(bv.access(4), true);   // 0100[1]; 4th bit is '1' (true)
-///
-/// assert_eq!(bv.rank(0), 0);  // [0]1001; Range [0, 0] has no '1'
-/// assert_eq!(bv.rank(3), 1);  // [0100]1; Range [0, 3] has 1 '1'
-/// assert_eq!(bv.rank(4), 2);  // [01001]; Range [0, 4] has 2 '1's
-///
-/// assert_eq!(bv.select(0), Some(0)); // []01001; Minimum i where range [0, i] has 0 '1's is i=0
-/// assert_eq!(bv.select(1), Some(1)); // 0[1]001; Minimum i where range [0, i] has 1 '1's is i=1
-/// assert_eq!(bv.select(2), Some(4)); // 0100[1]; Minimum i where range [0, i] has 2 '1's is i=4
-/// assert_eq!(bv.select(3), None);    // There is no i where range [0, i] has 3 '1's
-///
-/// // rank0, select0 -----------------------
-/// assert_eq!(bv.rank0(0), 1);  // [0]1001; Range [0, 0] has no '0'
-/// assert_eq!(bv.rank0(3), 3);  // [0100]1; Range [0, 3] has 3 '0's
-/// assert_eq!(bv.rank0(4), 3);  // [01001]; Range [0, 4] has 3 '0's
-///
-/// assert_eq!(bv.select0(0), Some(0)); // []01001; Minimum i where range [0, i] has 0 '0's is i=0
-/// assert_eq!(bv.select0(1), Some(0)); // [0]1001; Minimum i where range [0, i] has 1 '0's is i=0
-/// assert_eq!(bv.select0(2), Some(2)); // 01[0]01; Minimum i where range [0, i] has 2 '0's is i=2
-/// assert_eq!(bv.select0(4), None);    // There is no i where range [0, i] has 4 '0's
-/// ```
-///
-/// # Complexity
-/// See [README](https://github.com/laysakura/fid-rs/blob/master/README.md#complexity).
-///
 /// # Implementation detail
 /// [access()](#method.access)'s implementation is trivial.
 ///
