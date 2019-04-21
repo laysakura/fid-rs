@@ -1,5 +1,5 @@
 # {{crate}}
-test travis_terminate
+a test travis_terminate
 
 {{readme}}
 

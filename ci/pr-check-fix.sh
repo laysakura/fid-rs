@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -eux
 
+travis_terminate() {
+    set +e
+    pkill -9 -P $$ &> /dev/null || true
+    exit $1
+}
+
 rustup component add rustfmt
 cargo readme > /dev/null || cargo install cargo-readme  # skip if already available
 
