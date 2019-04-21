@@ -67,6 +67,12 @@ use fid_rs::Fid;
 
 // Most human-friendly way: Fid::from::<&str>()
 let fid = Fid::from("0100_1");
+
+// Complex construction in simple way: Fid::from::<&[bool]>()
+let mut arr = [false; 5];
+arr[1] = true;
+arr[4] = true;
+let fid = Fid::from(&arr[..]);
 ```
 
 ## Features
@@ -81,6 +87,7 @@ When the length of a `Fid` is _N_:
 | Operation | Time-complexity | Space-complexity |
 |-----------|-----------------|------------------|
 | [Fid::from::<&str>()](https://laysakura.github.io/fid-rs/fid_rs/fid/struct.Fid.html#implementations) | _O(N)_ | _N + o(N)_ |
+| [Fid::from::<&[bool]>()](https://laysakura.github.io/fid-rs/fid_rs/fid/struct.Fid.html#implementations) | _O(N)_ | _N + o(N)_ |
 | [Fid::access()](https://laysakura.github.io/fid-rs/fid_rs/fid/struct.Fid.html#method.access) | _O(1)_ | _0_ |
 | [Fid::rank()](https://laysakura.github.io/fid-rs/fid_rs/fid/struct.Fid.html#method.rank) | _O(1)_ | _O(log N)_ |
 | [Fid::rank0()](https://laysakura.github.io/fid-rs/fid_rs/fid/struct.Fid.html#method.rank0) | _O(1)_ | _O(log N)_ |

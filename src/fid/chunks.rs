@@ -100,7 +100,7 @@ mod new_success_tests {
             #[test]
             fn $name() {
                 let input: Input = $value;
-                let rbv = RawBitVector::from_bit_string(&BitString::new(input.in_s));
+                let rbv = RawBitVector::from(BitString::new(input.in_s));
                 let n = rbv.length();
                 let chunks = Chunks::new(&rbv);
 
