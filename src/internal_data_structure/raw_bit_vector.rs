@@ -26,7 +26,7 @@ impl RawBitVector {
     ///
     /// # Panics
     /// When _`length` == 0_.
-    pub fn from_length(length: u64) -> RawBitVector {
+    fn from_length(length: u64) -> RawBitVector {
         assert!(length > 0, "length must be > 0.");
 
         let last_byte_len_or_0 = (length % 8) as u8;
