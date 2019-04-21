@@ -173,8 +173,6 @@ enum FidSeed {
 struct Chunks {
     chunks: Vec<Chunk>,
 
-
-
     chunks_cnt: u64,
 }
 
