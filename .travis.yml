@@ -13,38 +13,43 @@ branches:
     - /^v[0-9]/  # tag
 cache: cargo
 
-# gnuplot for Criterion HTML Report
-addons:
-  apt:
-    packages:
-      - gnuplot-nox
-  homebrew:
-    packages:
-      - gnuplot
-
-before_script:
-  - ./ci/before_script.sh
+# before_script:
+#   - ./ci/before_script.sh
 script:
   - ./ci/script.sh
 
-deploy:
-  # GitHub Pages
-  - provider: pages
-    skip_cleanup: true
-    github_token: "$GITHUB_TOKEN"
-    local_dir: target/doc
-    on:
-      branch: master
+jobs:
+  include:
+    - stage: Only in a representative env
       rust: stable
-      condition: "$TRAVIS_OS_NAME == linux"
-  # crates.io
-  - provider: cargo
-    token:
-      secure: ropU3n6/KkmaNSjjqAW+Do3z3x9HGienPrH14tzB+h6PqTnu9VZNe4vBNbSixOl9U/x3yCC3j8b8hhLVYiqJt5ADmAH/QeCaLHMos/3q653unhqunttw/MoZkCXMdNqxHw8ZEvBAMOQrCi6Vp67G950b91Ouv7/GQgfjOSXK/7vcdbPwzAaXRA6VaUmUdhpqm+YOgFf2rdCSZEZeE6pE2FU7AK007VOOxQzHhMBQ9bPAnbEFnIqlHQUa7rQe9cbESLFCEND4PqywG5RPtUUcQevFyNjXDJjUDm1jMBAp/BxQXYyv764WMkz1RyT9/FEY5FOfYGNMkF/qXlvTT2N8krq3auP2+tOb9JWHWZ1mKTJfLXMdZaIJ0ehss72dluMKPp+kq9aMAHC4mpGXM3TT12IGMoNRwmlxI2ykWLGFjaqNq73iUPEIZeLU/eqcmN/YgNJQ8PrmgbBoFgiMxSXQANOctYwtauWFGGFhEufXDBH9alv0QUFNW1+q5M0sC9mrHWaqiaJinxPscy+KkckLGxszGuV2uTkVNuOPFTnkO1V4Grdc5l2hky9q/vFOxiUGHHkG0tl8NyNIcrwM767CvlfXQGr2rLn/MLsaTZUzpjOMcoAWcN3jCrHFxgxfPH4FsIhvqPRt7PyWGooPn3x6U7/Z6dzR/ehiVmI8cRXYoN0=
-    on:
-      tags: true
-      rust: stable
-      condition: "$TRAVIS_OS_NAME == linux"
+      os: linux
+
+      # gnuplot for Criterion HTML Report
+      addons:
+        apt:
+          packages:
+            - gnuplot-nox
+
+      script:
+        - cargo doc
+        - cargo bench --all
+        ## Move criterion's HTML report into doc/ dir in order to be uploaded in github.io
+        - rm -rf target/doc/criterion && mv target/criterion target/doc/
+
+      deploy:
+        # GitHub Pages
+        - provider: pages
+          skip_cleanup: true
+          github_token: "$GITHUB_TOKEN"
+          local_dir: target/doc
+          on:
+            branch: master
+        # crates.io
+        - provider: cargo
+          token:
+            secure: ropU3n6/KkmaNSjjqAW+Do3z3x9HGienPrH14tzB+h6PqTnu9VZNe4vBNbSixOl9U/x3yCC3j8b8hhLVYiqJt5ADmAH/QeCaLHMos/3q653unhqunttw/MoZkCXMdNqxHw8ZEvBAMOQrCi6Vp67G950b91Ouv7/GQgfjOSXK/7vcdbPwzAaXRA6VaUmUdhpqm+YOgFf2rdCSZEZeE6pE2FU7AK007VOOxQzHhMBQ9bPAnbEFnIqlHQUa7rQe9cbESLFCEND4PqywG5RPtUUcQevFyNjXDJjUDm1jMBAp/BxQXYyv764WMkz1RyT9/FEY5FOfYGNMkF/qXlvTT2N8krq3auP2+tOb9JWHWZ1mKTJfLXMdZaIJ0ehss72dluMKPp+kq9aMAHC4mpGXM3TT12IGMoNRwmlxI2ykWLGFjaqNq73iUPEIZeLU/eqcmN/YgNJQ8PrmgbBoFgiMxSXQANOctYwtauWFGGFhEufXDBH9alv0QUFNW1+q5M0sC9mrHWaqiaJinxPscy+KkckLGxszGuV2uTkVNuOPFTnkO1V4Grdc5l2hky9q/vFOxiUGHHkG0tl8NyNIcrwM767CvlfXQGr2rLn/MLsaTZUzpjOMcoAWcN3jCrHFxgxfPH4FsIhvqPRt7PyWGooPn3x6U7/Z6dzR/ehiVmI8cRXYoN0=
+          on:
+            tags: true
 
 env:
   global:
