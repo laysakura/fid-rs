@@ -157,6 +157,76 @@ impl Fid {
 }
 
 #[cfg(test)]
+mod from_str_success_tests {
+    use crate::Fid;
+
+    macro_rules! parameterized_tests {
+        ($($name:ident: $value:expr,)*) => {
+        $(
+            #[test]
+            fn $name() {
+                let (s, expected_bits) = $value;
+                let bv = Fid::from(s).unwrap();
+
+                // TODO length check
+                // assert_eq!(bv.length(), expected_bits);
+                for (i, bit) in expected_bits.iter().enumerate() {
+                    assert_eq!(bv.access(i as u64), *bit);
+                }
+            }
+        )*
+        }
+    }
+
+    parameterized_tests! {
+        t1: ("0", vec![false]),
+        t2: ("1", vec![true]),
+        t3: ("00", vec![false, false]),
+        t4: ("01", vec![false, true]),
+        t5: ("10", vec![true, false]),
+        t6: ("11", vec![true, true]),
+        t7: ("0101_0101__0101_1100__1000_001", vec![
+            false, true, false, true,
+            false, true, false, true,
+            false, true, false, true,
+            true, true, false, false,
+            false, false, true,
+        ]),
+    }
+}
+
+#[cfg(test)]
+mod from_str_failure_tests {
+    use crate::Fid;
+
+    macro_rules! parameterized_tests {
+        ($($name:ident: $value:expr,)*) => {
+        $(
+            #[test]
+            fn $name() {
+                let s = $value;
+                assert!(Fid::from(s).is_none());
+            }
+        )*
+        }
+    }
+
+    parameterized_tests! {
+        t0: "",
+        t1: " ",
+        t2: " 0",
+        t3: "0 ",
+        t4: "1 0",
+        t5: "０",
+        t6: "１",
+        t7: "012",
+        t8: "01二",
+        t9: "_____",
+    }
+
+}
+
+#[cfg(test)]
 mod access_success_tests {
     // well-tested in fid_builder::{builder_from_length_success_tests, builder_from_bit_string_success_tests}
 }
