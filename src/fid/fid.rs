@@ -39,7 +39,8 @@ impl From<&[bool]> for Fid {
     /// ```
     /// use fid_rs::Fid;
     ///
-    /// let fid = Fid::from(&[false, true, true, true]);
+    /// let bits = [false, true, true, true];
+    /// let fid = Fid::from(&bits[..]);
     /// assert_eq!(fid.access(0), false);
     /// assert_eq!(fid.access(1), true);
     /// assert_eq!(fid.access(2), true);
