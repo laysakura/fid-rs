@@ -3,6 +3,8 @@ set -eux
 
 ## Auto commit & push by CI
 ### README.md from src/lib.rs
+git branch -a
+
 cargo readme > README.md
 git add README.md
 git commit -m 'cargo readme > README.md' &&:
