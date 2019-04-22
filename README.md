@@ -33,9 +33,9 @@ use fid_rs::Fid;
 let fid = Fid::from("0100_1");  // Tips: Fid::from::<&str>() ignores '_'.
 
 // Basic operations ---------------------
-assert_eq!(fid.access(0), false);  // [0]1001; 0th bit is '0' (false)
-assert_eq!(fid.access(1), true);   // 0[1]001; 1st bit is '1' (true)
-assert_eq!(fid.access(4), true);   // 0100[1]; 4th bit is '1' (true)
+assert_eq!(fid[0], false);  // [0]1001; 0th bit is '0' (false)
+assert_eq!(fid[1], true);   // 0[1]001; 1st bit is '1' (true)
+assert_eq!(fid[4], true);   // 0100[1]; 4th bit is '1' (true)
 
 assert_eq!(fid.rank(0), 0);  // [0]1001; Range [0, 0] has no '1'
 assert_eq!(fid.rank(3), 1);  // [0100]1; Range [0, 3] has 1 '1'
@@ -103,7 +103,7 @@ When the length of a `Fid` is _N_:
 |-----------|-----------------|------------------|
 | [Fid::from::<&str>()](https://laysakura.github.io/fid-rs/fid_rs/fid/struct.Fid.html#implementations) | _O(N)_ | _N + o(N)_ |
 | [Fid::from::<&[bool]>()](https://laysakura.github.io/fid-rs/fid_rs/fid/struct.Fid.html#implementations) | _O(N)_ | _N + o(N)_ |
-| [Fid::access()](https://laysakura.github.io/fid-rs/fid_rs/fid/struct.Fid.html#method.access) | _O(1)_ | _0_ |
+| [Index&lt;u64&gt;](https://laysakura.github.io/fid-rs/fid_rs/fid/struct.Fid.html#impl-Index<u64>) | _O(1)_ | _0_ |
 | [Fid::rank()](https://laysakura.github.io/fid-rs/fid_rs/fid/struct.Fid.html#method.rank) | _O(1)_ | _O(log N)_ |
 | [Fid::rank0()](https://laysakura.github.io/fid-rs/fid_rs/fid/struct.Fid.html#method.rank0) | _O(1)_ | _O(log N)_ |
 | [Fid::select()](https://laysakura.github.io/fid-rs/fid_rs/fid/struct.Fid.html#method.select) | _O(log N)_ | _O(log N)_ |
