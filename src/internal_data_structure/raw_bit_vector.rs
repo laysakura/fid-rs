@@ -3,14 +3,14 @@ use std::fmt;
 
 #[derive(PartialEq, Eq, Debug)]
 /// Bit vector of arbitrary length (actually the length is limited to _[1, 2^64)_).
-pub struct RawBitVector {
-    byte_vec: Vec<u8>,
+pub struct RawBitVector<'a> {
+    byte_slice: &'a [u8],
     last_byte_len: u8,
 }
 
-impl From<BitString> for RawBitVector {
+impl<'a> From<BitString> for RawBitVector<'a> {
     /// Makes a bit vector from `BitString` representation.
-    fn from(bs: BitString) -> RawBitVector {
+    fn from(bs: BitString) -> Self {
         let mut rbv = RawBitVector::from_length(bs.str().len() as u64);
         for (i, c) in bs.str().chars().enumerate() {
             if c == '1' {
@@ -21,9 +21,9 @@ impl From<BitString> for RawBitVector {
     }
 }
 
-impl From<&[bool]> for RawBitVector {
+impl<'a> From<&[bool]> for RawBitVector<'a> {
     /// Makes a bit vector from slice of boolean.
-    fn from(bits: &[bool]) -> RawBitVector {
+    fn from(bits: &[bool]) -> Self {
         let mut rbv = RawBitVector::from_length(bits.len() as u64);
         for (i, bit) in bits.iter().enumerate() {
             if *bit {
@@ -34,12 +34,12 @@ impl From<&[bool]> for RawBitVector {
     }
 }
 
-impl RawBitVector {
+impl<'a> RawBitVector<'a> {
     /// Makes a bit vector of `length`, willed with 0.
     ///
     /// # Panics
     /// When _`length` == 0_.
-    fn from_length(length: u64) -> RawBitVector {
+    fn from_length(length: u64) -> Self {
         assert!(length > 0, "length must be > 0.");
 
         let last_byte_len_or_0 = (length % 8) as u8;
@@ -49,8 +49,8 @@ impl RawBitVector {
             last_byte_len_or_0
         };
 
-        RawBitVector {
-            byte_vec: vec![0; ((length - 1) / 8 + 1) as usize],
+        Self {
+            byte_slice: &vec![0; ((length - 1) / 8 + 1) as usize],
             last_byte_len,
         }
     }
@@ -61,7 +61,7 @@ impl RawBitVector {
     /// When _`i` >= `self.length()`_.
     pub fn access(&self, i: u64) -> bool {
         self.validate_index(i);
-        let byte = self.byte_vec[(i / 8) as usize];
+        let byte = self.byte_slice[(i / 8) as usize];
         match i % 8 {
             0 => byte & 0b1000_0000 != 0,
             1 => byte & 0b0100_0000 != 0,
@@ -81,8 +81,8 @@ impl RawBitVector {
     /// When _`i` >= `self.length()`_.
     pub fn set_bit(&mut self, i: u64) {
         self.validate_index(i);
-        let byte = self.byte_vec[(i / 8) as usize];
-        self.byte_vec[(i / 8) as usize] = match i % 8 {
+        let byte = self.byte_slice[(i / 8) as usize];
+        self.byte_slice[(i / 8) as usize] = match i % 8 {
             0 => byte | 0b1000_0000,
             1 => byte | 0b0100_0000,
             2 => byte | 0b0010_0000,
@@ -97,17 +97,18 @@ impl RawBitVector {
 
     /// Returns length.
     pub fn length(&self) -> u64 {
-        (self.byte_vec.len() as u64 - 1) * 8 + (self.last_byte_len as u64)
+        (self.byte_slice.len() as u64 - 1) * 8 + (self.last_byte_len as u64)
     }
 
     /// Returns popcount of whole this bit vector.
     pub fn popcount(&self) -> u64 {
-        self.byte_vec
+        self.byte_slice
             .iter()
             .fold(0, |popcnt: u64, byte| byte.count_ones() as u64 + popcnt)
     }
 
     /// Makes another RawBitVector from _[`i`, `i` + `size`)_ of self.
+    /// This method is inexpensive in that it does not copy internal bit vector.
     ///
     /// # Panics
     /// When:
@@ -124,10 +125,10 @@ impl RawBitVector {
         );
         assert!(size > 0, "length must be > 0");
 
-        let mut sub_byte_vec: Vec<u8> = Vec::with_capacity(size as usize / 8 + 1);
+        let mut sub_byte_slice: Vec<u8> = Vec::with_capacity(size as usize / 8 + 1);
 
         // Memo for implementation:
-        // Assume self.byte_vec == 00000000 11111111 00000000 11111
+        // Assume self.byte_slice == 00000000 11111111 00000000 11111
         //
         // 00000000 11111111 00000000 11111
         //        ^                     ^
@@ -143,22 +144,22 @@ impl RawBitVector {
 
         if start % 8 == 0 {
             for j in (start..end).step_by(8) {
-                // Copy 1~8 bits from a single byte in self.byte_vec.
-                let byte = self.byte_vec[j as usize / 8];
+                // Copy 1~8 bits from a single byte in self.byte_slice.
+                let byte = self.byte_slice[j as usize / 8];
                 let right_bits_to_discard = if end - j >= 8 { 0 } else { 8 - (end - j) };
                 let copied_byte = (byte >> right_bits_to_discard) << right_bits_to_discard;
-                sub_byte_vec.push(copied_byte);
+                sub_byte_slice.push(copied_byte);
             }
         } else {
             let left_bits_to_discard_from_byte1 = start % 8;
             let right_bits_to_discard_from_byte2 = 8 - left_bits_to_discard_from_byte1;
 
             for j in (start..end).step_by(8) {
-                // Copy 1~8 bits from 2 byte in self.byte_vec (second byte can be a sentinel).
+                // Copy 1~8 bits from 2 byte in self.byte_slice (second byte can be a sentinel).
                 let i_byte1 = j as usize / 8;
-                let byte1 = self.byte_vec[i_byte1];
-                let byte2 = if i_byte1 + 1 < self.byte_vec.len() {
-                    self.byte_vec[i_byte1 + 1]
+                let byte1 = self.byte_slice[i_byte1];
+                let byte2 = if i_byte1 + 1 < self.byte_slice.len() {
+                    self.byte_slice[i_byte1 + 1]
                 } else {
                     0u8
                 };
@@ -169,27 +170,27 @@ impl RawBitVector {
                     if end - j >= 8 { 0 } else { 8 - (end - j) };
                 let copied_byte = copied_byte >> right_bits_to_discard_from_copied_byte
                     << right_bits_to_discard_from_copied_byte;
-                sub_byte_vec.push(copied_byte);
+                sub_byte_slice.push(copied_byte);
             }
         }
 
         RawBitVector {
-            byte_vec: sub_byte_vec,
+            byte_slice: sub_byte_slice,
             last_byte_len: if size % 8 == 0 { 8 } else { (size % 8) as u8 },
         }
     }
 
-    /// Returns a concatenated number of `self.byte_vec[0, 3]`.
+    /// Returns a concatenated number of `self.byte_slice[0, 3]`.
     ///
     /// # Panics
-    /// If _`self.byte_vec.len()` > 4_
+    /// If _`self.byte_slice.len()` > 4_
     pub fn as_u32(&self) -> u32 {
         assert!(
-            self.byte_vec.len() <= 4,
-            "self.byte_vec.len() = {} must be <= 4",
-            self.byte_vec.len()
+            self.byte_slice.len() <= 4,
+            "self.byte_slice.len() = {} must be <= 4",
+            self.byte_slice.len()
         );
-        let bv = &self.byte_vec;
+        let bv = &self.byte_slice;
 
         let byte0 = if bv.len() > 0 { bv[0] as u32 } else { 0u32 };
         let byte1 = if bv.len() > 1 { bv[1] as u32 } else { 0u32 };
@@ -213,12 +214,12 @@ impl RawBitVector {
 impl fmt::Display for RawBitVector {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let bits_str = self
-            .byte_vec
+            .byte_slice
             .iter()
             .enumerate()
             .map(|(i, byte)| {
                 let byte_s = format!("{: >8}", format!("{:b}", byte)).replace(' ', "0");
-                if i < self.byte_vec.len() - 1 {
+                if i < self.byte_slice.len() - 1 {
                     byte_s
                 } else {
                     byte_s
