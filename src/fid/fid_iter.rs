@@ -32,7 +32,7 @@ impl<'a> Iterator for FidIter<'a> {
             None
         } else {
             self.i += 1;
-            Some(self.fid.access(self.i - 1))
+            Some(self.fid[self.i - 1])
         }
     }
 }
@@ -45,7 +45,7 @@ mod iter_success_tests {
     fn iter() {
         let fid = Fid::from("1010_1010");
         for (i, bit) in fid.iter().enumerate() {
-            assert_eq!(bit, fid.access(i as u64));
+            assert_eq!(bit, fid[i as u64]);
         }
     }
 }

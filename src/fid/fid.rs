@@ -2,6 +2,7 @@ use super::{Blocks, Chunks, Fid};
 use crate::internal_data_structure::bit_string::BitString;
 use crate::internal_data_structure::popcount_table::PopcountTable;
 use crate::internal_data_structure::raw_bit_vector::RawBitVector;
+use std::ops::Index;
 
 impl From<&str> for Fid {
     /// Constructor from string representation of bit sequence.
@@ -65,15 +66,26 @@ impl From<RawBitVector> for Fid {
     }
 }
 
-impl Fid {
+static TRUE: bool = true;
+static FALSE: bool = false;
+
+impl Index<u64> for Fid {
+    type Output = bool;
+
     /// Returns `i`-th element of the `Fid`.
     ///
     /// # Panics
     /// When _`i` >= length of the `Fid`_.
-    pub fn access(&self, i: u64) -> bool {
-        self.rbv.access(i)
+    fn index(&self, index: u64) -> &Self::Output {
+        if self.rbv.access(index) {
+            &TRUE
+        } else {
+            &FALSE
+        }
     }
+}
 
+impl Fid {
     /// Returns the number of _1_ in _[0, `i`]_ elements of the `Fid`.
     ///
     /// # Panics
@@ -172,7 +184,7 @@ impl Fid {
         let n = self.rbv.length();
         assert!(num <= n);
 
-        if num == 0 || num == 1 && self.access(0) == true {
+        if num == 0 || num == 1 && self[0] == true {
             return Some(0);
         }
         if self.rank(n - 1) < num {
@@ -200,7 +212,7 @@ impl Fid {
         let n = self.rbv.length();
         assert!(num <= n);
 
-        if num == 0 || num == 1 && self.access(0) == false {
+        if num == 0 || num == 1 && self[0] == false {
             return Some(0);
         }
         if self.rank0(n - 1) < num {
@@ -236,7 +248,7 @@ mod from_str_success_tests {
                 // TODO length check
                 // assert_eq!(fid.length(), expected_bits);
                 for (i, bit) in expected_bits.iter().enumerate() {
-                    assert_eq!(fid.access(i as u64), *bit);
+                    assert_eq!(fid[i as u64], *bit);
                 }
             }
         )*
@@ -281,7 +293,7 @@ mod from_slice_success_tests {
                 // TODO length check
                 // assert_eq!(fid.length(), expected_bits);
                 for (i, bit) in arr.iter().enumerate() {
-                    assert_eq!(fid.access(i as u64), *bit);
+                    assert_eq!(fid[i as u64], *bit);
                 }
             }
         )*
@@ -318,7 +330,7 @@ mod access_failure_tests {
     #[should_panic]
     fn over_upper_bound() {
         let fid = Fid::from("00");
-        let _ = fid.access(2);
+        let _ = fid[2];
     }
 }
 

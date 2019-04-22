@@ -3,8 +3,8 @@ use fid_rs::Fid;
 #[test]
 fn from_str() {
     let fid = Fid::from("01");
-    assert_eq!(fid.access(0), false);
-    assert_eq!(fid.access(1), true);
+    assert_eq!(fid[0], false);
+    assert_eq!(fid[1], true);
 }
 
 #[test]
@@ -78,14 +78,14 @@ fn fuzzing_test() {
         let fid = Fid::from(s.as_str());
 
         for i in 0..s.len() {
-            eprintln!("access(): bit vec = \"{}\", i = {}, ", s, i);
+            eprintln!("[] op: bit vec = \"{}\", i = {}, ", s, i);
             assert_eq!(
-                fid.access(i as u64),
+                fid[i as u64],
                 access_from_bit_string(s, i as u64),
                 "bit vec = \"{}\", i={}, Fid::access()={}, access_from_bit_string={}",
                 s,
                 i,
-                fid.access(i as u64),
+                fid[i as u64],
                 access_from_bit_string(s, i as u64)
             );
 
