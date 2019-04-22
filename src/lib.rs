@@ -26,8 +26,6 @@
 //! ## Usage Overview
 //!
 //! ```rust
-//! extern crate fid_rs;
-//!
 //! use fid_rs::Fid;
 //!
 //! let fid = Fid::from("0100_1");  // Tips: Fid::from::<&str>() ignores '_'.
@@ -60,7 +58,6 @@
 //! ## Constructors
 //!
 //! ```rust
-//! extern crate fid_rs;
 //! use fid_rs::Fid;
 //!
 //! // Most human-friendly way: Fid::from::<&str>()
@@ -71,6 +68,24 @@
 //! arr[1] = true;
 //! arr[4] = true;
 //! let fid = Fid::from(&arr[..]);
+//! ```
+//!
+//! ## Iterator
+//!
+//! ```rust
+//! use fid_rs::Fid;
+//!
+//! let fid = Fid::from("0100_1");
+//!
+//! for bit in fid.iter() {
+//!     println!("{}", bit);
+//! }
+//! // =>
+//! // false
+//! // true
+//! // false
+//! // false
+//! // true
 //! ```
 //!
 //! # Features
