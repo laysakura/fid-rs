@@ -9,6 +9,8 @@ impl super::Chunks {
         let chunks_cnt: u64 = Chunks::calc_chunks_cnt(n);
 
         let mut chunks: Vec<Chunk> = Vec::with_capacity(chunks_cnt as usize);
+
+        // Parallel
         for i_chunk in 0..(chunks_cnt as usize) {
             let this_chunk_size: u16 = if i_chunk as u64 == chunks_cnt - 1 {
                 // When `chunk_size == 6`:
@@ -32,19 +34,19 @@ impl super::Chunks {
                 rbv.copy_sub(i_chunk as u64 * chunk_size as u64, this_chunk_size as u64);
 
             let popcnt_in_chunk = chunk_rbv.popcount();
-            let chunk = Chunk::new(
-                popcnt_in_chunk
-                    + if i_chunk == 0 {
-                        0
-                    } else {
-                        chunks[i_chunk - 1].value
-                    },
-                this_chunk_size,
-                rbv,
-                i_chunk as u64,
-            );
+            let chunk = Chunk::new(popcnt_in_chunk, this_chunk_size, rbv, i_chunk as u64);
             chunks.push(chunk);
         }
+
+        // Sequential
+        for i_chunk in 0..(chunks_cnt as usize) {
+            chunks[i_chunk].value += if i_chunk == 0 {
+                0
+            } else {
+                chunks[i_chunk - 1].value
+            }
+        }
+
         Chunks { chunks, chunks_cnt }
     }
 
