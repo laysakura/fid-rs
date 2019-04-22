@@ -16,7 +16,7 @@ use super::internal_data_structure::raw_bit_vector::RawBitVector;
 /// It should be enough for almost all usecases since a binary data of length of _2^64_ consumes _2^21 = 2,097,152_ TB (terabyte), which is hard to handle by state-of-the-art computer architecture.
 ///
 /// # Implementation detail
-/// [access()](#method.access)'s implementation is trivial.
+/// [Index&lt;u64&gt;](#impl-Index<u64>)'s implementation is trivial.
 ///
 /// [select()](#method.select) just uses binary search of `rank()` results.
 ///

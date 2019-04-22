@@ -82,7 +82,7 @@ fn fuzzing_test() {
             assert_eq!(
                 fid[i as u64],
                 access_from_bit_string(s, i as u64),
-                "bit vec = \"{}\", i={}, Fid::access()={}, access_from_bit_string={}",
+                "bit vec = \"{}\", i={}, Index<u64>()={}, access_from_bit_string={}",
                 s,
                 i,
                 fid[i as u64],

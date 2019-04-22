@@ -16,10 +16,10 @@ impl From<&str> for Fid {
     /// use fid_rs::Fid;
     ///
     /// let fid = Fid::from("01_11");
-    /// assert_eq!(fid.access(0), false);
-    /// assert_eq!(fid.access(1), true);
-    /// assert_eq!(fid.access(2), true);
-    /// assert_eq!(fid.access(3), true);
+    /// assert_eq!(fid[0], false);
+    /// assert_eq!(fid[1], true);
+    /// assert_eq!(fid[2], true);
+    /// assert_eq!(fid[3], true);
     /// ```
     ///
     /// # Panics
@@ -42,10 +42,10 @@ impl From<&[bool]> for Fid {
     ///
     /// let bits = [false, true, true, true];
     /// let fid = Fid::from(&bits[..]);
-    /// assert_eq!(fid.access(0), false);
-    /// assert_eq!(fid.access(1), true);
-    /// assert_eq!(fid.access(2), true);
-    /// assert_eq!(fid.access(3), true);
+    /// assert_eq!(fid[0], false);
+    /// assert_eq!(fid[1], true);
+    /// assert_eq!(fid[2], true);
+    /// assert_eq!(fid[3], true);
     /// ```
     ///
     /// # Panics
@@ -318,12 +318,12 @@ mod from_slice_failure_tests {
 }
 
 #[cfg(test)]
-mod access_success_tests {
+mod index_u64_success_tests {
     // well-tested in fid_builder::{builder_from_length_success_tests, builder_from_bit_string_success_tests}
 }
 
 #[cfg(test)]
-mod access_failure_tests {
+mod index_u64_failure_tests {
     use crate::Fid;
 
     #[test]
