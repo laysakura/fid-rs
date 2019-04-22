@@ -25,7 +25,7 @@ impl super::Blocks {
                 (n - i_rbv) as u8
             };
 
-            let block_rbv = rbv.copy_sub(i_rbv, this_block_size as u64);
+            let block_rbv = rbv.clone_sub(i_rbv, this_block_size as u64);
             let popcount_in_block = block_rbv.popcount() as u16;
             let block = Block::new(
                 popcount_in_block

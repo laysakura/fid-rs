@@ -155,7 +155,7 @@ impl Fid {
         assert!(i - pos_block_start < block_right.length() as u64);
         let block_right_rbv = self
             .rbv
-            .copy_sub(pos_block_start, block_right.length() as u64);
+            .clone_sub(pos_block_start, block_right.length() as u64);
         let block_right_as_u32 = block_right_rbv.as_u32();
         let bits_to_use = i - pos_block_start + 1;
         let block_bits = block_right_as_u32 >> (32 - bits_to_use);

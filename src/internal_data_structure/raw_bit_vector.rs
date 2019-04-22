@@ -113,7 +113,7 @@ impl RawBitVector {
     /// When:
     /// - _`i` + `size` >= `self.length()`_
     /// - _`size` == 0_
-    pub fn copy_sub(&self, i: u64, size: u64) -> RawBitVector {
+    pub fn clone_sub(&self, i: u64, size: u64) -> RawBitVector {
         self.validate_index(i);
         assert!(
             i + size <= self.length(),
@@ -595,7 +595,7 @@ mod set_bit_failure_tests {
 }
 
 #[cfg(test)]
-mod copy_sub_success_tests {
+mod clone_sub_success_tests {
     use super::{BitString, RawBitVector};
 
     macro_rules! parameterized_tests {
@@ -605,7 +605,7 @@ mod copy_sub_success_tests {
             fn $name() {
                 let (s, i, size, expected_bit_vec) = $value;
                 let rbv = RawBitVector::from(BitString::new(s));
-                let copied_rbv = rbv.copy_sub(i, size);
+                let copied_rbv = rbv.clone_sub(i, size);
 
                 assert_eq!(copied_rbv.length(), expected_bit_vec.len() as u64);
                 for (i, expected_bit) in expected_bit_vec.iter().enumerate() {
@@ -650,7 +650,7 @@ mod copy_sub_success_tests {
 }
 
 #[cfg(test)]
-mod copy_sub_failure_tests {
+mod clone_sub_failure_tests {
     use super::{BitString, RawBitVector};
 
     macro_rules! parameterized_tests {
@@ -661,7 +661,7 @@ mod copy_sub_failure_tests {
             fn $name() {
                 let (s, i, size) = $value;
                 let rbv = RawBitVector::from(BitString::new(s));
-                let _ = rbv.copy_sub(i, size);
+                let _ = rbv.clone_sub(i, size);
             }
         )*
         }
@@ -690,7 +690,7 @@ mod copy_sub_failure_tests {
 }
 
 #[cfg(test)]
-mod copy_sub_fuzzing_tests {
+mod clone_sub_fuzzing_tests {
     use super::{BitString, RawBitVector};
 
     #[test]
@@ -709,14 +709,14 @@ mod copy_sub_fuzzing_tests {
 
             for i in 0..s.len() {
                 for size in 1..(s.len() - i) {
-                    let copied_rbv = rbv.copy_sub(i as u64, size as u64);
+                    let copied_rbv = rbv.clone_sub(i as u64, size as u64);
 
                     let substr = sub_str(s, i as u64, size as u64);
                     let substr_bs = BitString::new(&substr);
                     let substr_rbv = RawBitVector::from(substr_bs);
 
                     assert_eq!(copied_rbv, substr_rbv,
-                        "\nbit vector = {}, RawBitVector::copy_sub(i={}, size={});\nActual:   {}\nExpected: {}",
+                        "\nbit vector = {}, RawBitVector::clone_sub(i={}, size={});\nActual:   {}\nExpected: {}",
                         s, i, size, copied_rbv, substr
                     );
                 }

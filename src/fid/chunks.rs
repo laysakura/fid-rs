@@ -40,7 +40,7 @@ impl super::Chunks {
                 };
 
                 let chunk_rbv =
-                    rbv.copy_sub(i_chunk as u64 * chunk_size as u64, this_chunk_size as u64);
+                    rbv.clone_sub(i_chunk as u64 * chunk_size as u64, this_chunk_size as u64);
 
                 let popcnt_in_chunk = chunk_rbv.popcount();
                 *chunk = Some(Chunk::new(
