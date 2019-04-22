@@ -93,6 +93,7 @@ for bit in fid.iter() {
 ## Features
 
 - **Arbitrary length support with minimum working memory**: fid-rs provides virtually _arbitrary size_ of FID. It is carefully designed to use as small memory space as possible.
+- **Parallel build of FID**: Build operations (`Fid::from()`) takes _O(N)_ time. It is parallelized and achieves nearly optimal scale-out.
 - **Latest benchmark results are always accessible**: fid-rs is continuously benchmarked in Travis CI using [Criterion.rs](https://crates.io/crates/criterion). Graphical benchmark results are published [here](https://laysakura.github.io/fid-rs/criterion/report/).
 
 ### Complexity
