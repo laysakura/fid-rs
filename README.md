@@ -28,8 +28,6 @@ fid_rs = "0.1"
 ### Usage Overview
 
 ```rust
-extern crate fid_rs;
-
 use fid_rs::Fid;
 
 let fid = Fid::from("0100_1");  // Tips: Fid::from::<&str>() ignores '_'.
@@ -62,7 +60,6 @@ assert_eq!(fid.select0(4), None);    // There is no i where range [0, i] has 4 '
 ### Constructors
 
 ```rust
-extern crate fid_rs;
 use fid_rs::Fid;
 
 // Most human-friendly way: Fid::from::<&str>()
@@ -73,6 +70,24 @@ let mut arr = [false; 5];
 arr[1] = true;
 arr[4] = true;
 let fid = Fid::from(&arr[..]);
+```
+
+### Iterator
+
+```rust
+use fid_rs::Fid;
+
+let fid = Fid::from("0100_1");
+
+for bit in fid.iter() {
+    println!("{}", bit);
+}
+// =>
+// false
+// true
+// false
+// false
+// true
 ```
 
 ## Features

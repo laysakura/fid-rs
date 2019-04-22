@@ -3,6 +3,7 @@ mod blocks;
 mod chunk;
 mod chunks;
 mod fid;
+mod fid_iter;
 
 use super::internal_data_structure::popcount_table::PopcountTable;
 use super::internal_data_structure::raw_bit_vector::RawBitVector;
@@ -106,6 +107,11 @@ pub struct Fid {
 
     /// Table to calculate inner-block `rank()` in _O(1)_.
     table: PopcountTable,
+}
+
+pub struct FidIter<'a> {
+    fid: &'a Fid,
+    i: u64,
 }
 
 /// Collection of Chunk.
