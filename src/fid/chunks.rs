@@ -1,3 +1,6 @@
+extern crate rayon;
+use rayon::prelude::*;
+
 use super::{Chunk, Chunks};
 use crate::internal_data_structure::raw_bit_vector::RawBitVector;
 
@@ -8,37 +11,48 @@ impl super::Chunks {
         let chunk_size: u16 = Chunks::calc_chunk_size(n);
         let chunks_cnt: u64 = Chunks::calc_chunks_cnt(n);
 
-        let mut chunks: Vec<Chunk> = Vec::with_capacity(chunks_cnt as usize);
+        // In order to use chunks.par_iter_mut(), chunks should have len first.
+        // So fill meaning less None value.
+        let mut opt_chunks: Vec<Option<Chunk>> = vec![None; chunks_cnt as usize];
 
-        // Parallel
-        for i_chunk in 0..(chunks_cnt as usize) {
-            let this_chunk_size: u16 = if i_chunk as u64 == chunks_cnt - 1 {
-                // When `chunk_size == 6`:
-                //
-                //  000 111 000 11   : rbv
-                // |       |      |  : chunks
-                //
-                // Here, when `i_chunk == 1` (targeting on last '00011' chunk),
-                // `this_chunk_size == 5`
-                let chunk_size_or_0 = (n % chunk_size as u64) as u16;
-                if chunk_size_or_0 == 0 {
-                    chunk_size
+        // Parallel - Each chunk has its popcount.
+        //     Actually, chunk should have total popcount from index 0 but it is calculated later in sequential manner.
+        opt_chunks
+            .par_iter_mut()
+            .enumerate()
+            .for_each(|(i_chunk, chunk)| {
+                let this_chunk_size: u16 = if i_chunk as u64 == chunks_cnt - 1 {
+                    // When `chunk_size == 6`:
+                    //
+                    //  000 111 000 11   : rbv
+                    // |       |      |  : chunks
+                    //
+                    // Here, when `i_chunk == 1` (targeting on last '00011' chunk),
+                    // `this_chunk_size == 5`
+                    let chunk_size_or_0 = (n % chunk_size as u64) as u16;
+                    if chunk_size_or_0 == 0 {
+                        chunk_size
+                    } else {
+                        chunk_size_or_0
+                    }
                 } else {
-                    chunk_size_or_0
-                }
-            } else {
-                chunk_size
-            };
+                    chunk_size
+                };
 
-            let chunk_rbv =
-                rbv.copy_sub(i_chunk as u64 * chunk_size as u64, this_chunk_size as u64);
+                let chunk_rbv =
+                    rbv.copy_sub(i_chunk as u64 * chunk_size as u64, this_chunk_size as u64);
 
-            let popcnt_in_chunk = chunk_rbv.popcount();
-            let chunk = Chunk::new(popcnt_in_chunk, this_chunk_size, rbv, i_chunk as u64);
-            chunks.push(chunk);
-        }
+                let popcnt_in_chunk = chunk_rbv.popcount();
+                *chunk = Some(Chunk::new(
+                    popcnt_in_chunk,
+                    this_chunk_size,
+                    rbv,
+                    i_chunk as u64,
+                ));
+            });
 
-        // Sequential
+        // Sequential - Each chunk has total popcount from index 0.
+        let mut chunks: Vec<Chunk> = opt_chunks.into_iter().map(|v| v.unwrap()).collect();
         for i_chunk in 0..(chunks_cnt as usize) {
             chunks[i_chunk].value += if i_chunk == 0 {
                 0
@@ -46,7 +60,6 @@ impl super::Chunks {
                 chunks[i_chunk - 1].value
             }
         }
-
         Chunks { chunks, chunks_cnt }
     }
 
