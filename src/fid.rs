@@ -6,7 +6,6 @@ mod fid;
 mod fid_iter;
 
 use super::internal_data_structure::popcount_table::PopcountTable;
-use super::internal_data_structure::raw_bit_vector::RawBitVector;
 
 /// FID (Fully Indexable Dictionary).
 ///
@@ -97,7 +96,10 @@ use super::internal_data_structure::raw_bit_vector::RawBitVector;
 ///   _rank() = (value of left chunk) + (value of left block) + (value of table keyed by inner block bits)_.
 pub struct Fid {
     /// Raw data.
-    rbv: RawBitVector,
+    byte_vec: Vec<u8>,
+
+    /// Bit length
+    bit_len: u64,
 
     /// Total popcount of _[0, <u>last bit of the chunk</u>]_.
     ///
@@ -109,15 +111,14 @@ pub struct Fid {
     table: PopcountTable,
 }
 
-pub struct FidIter<'a> {
-    fid: &'a Fid,
+pub struct FidIter<'iter> {
+    fid: &'iter Fid,
     i: u64,
 }
 
 /// Collection of Chunk.
 struct Chunks {
     chunks: Vec<Chunk>,
-
     chunks_cnt: u64,
 }
 

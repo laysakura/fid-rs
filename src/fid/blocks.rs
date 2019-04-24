@@ -4,7 +4,7 @@ use crate::internal_data_structure::raw_bit_vector::RawBitVector;
 impl super::Blocks {
     /// Constructor.
     pub fn new(rbv: &RawBitVector, i_chunk: u64, this_chunk_size: u16) -> Blocks {
-        let n = rbv.length();
+        let n = rbv.len();
         let chunk_size = Chunks::calc_chunk_size(n);
         let block_size = Blocks::calc_block_size(n);
         let blocks_cnt = this_chunk_size / block_size as u16

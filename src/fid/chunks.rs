@@ -7,7 +7,7 @@ use crate::internal_data_structure::raw_bit_vector::RawBitVector;
 impl super::Chunks {
     /// Constructor.
     pub fn new(rbv: &RawBitVector) -> Chunks {
-        let n = rbv.length();
+        let n = rbv.len();
         let chunk_size: u16 = Chunks::calc_chunk_size(n);
         let chunks_cnt: u64 = Chunks::calc_chunks_cnt(n);
 
@@ -100,11 +100,11 @@ impl super::Chunks {
 #[cfg(test)]
 mod new_success_tests {
     use super::Chunks;
-    use crate::internal_data_structure::bit_string::BitString;
     use crate::internal_data_structure::raw_bit_vector::RawBitVector;
 
     struct Input<'a> {
-        in_s: &'a str,
+        byte_slice: &'a [u8],
+        last_byte_len: u8,
         expected_chunk_size: u16,
         expected_chunks: &'a Vec<u64>,
     }
@@ -115,8 +115,8 @@ mod new_success_tests {
             #[test]
             fn $name() {
                 let input: Input = $value;
-                let rbv = RawBitVector::from(BitString::new(input.in_s));
-                let n = rbv.length();
+                let rbv = RawBitVector::new(input.byte_slice, 0, input.last_byte_len);
+                let n = rbv.len();
                 let chunks = Chunks::new(&rbv);
 
                 assert_eq!(Chunks::calc_chunk_size(n), input.expected_chunk_size);
@@ -132,43 +132,59 @@ mod new_success_tests {
 
     parameterized_tests! {
         t1: Input {
-            in_s: "0", // N = 1, (log_2(N))^2 = 1
+            // N = 1, (log_2(N))^2 = 1
+            byte_slice: &[0b0000_0000],
+            last_byte_len: 1,
             expected_chunk_size: 1,
             expected_chunks: &vec!(0)
         },
         t2: Input {
-            in_s: "1", // N = 1, (log_2(N))^2 = 1
+            // N = 1, (log_2(N))^2 = 1
+            byte_slice: &[0b0000_0001],
+            last_byte_len: 1,
             expected_chunk_size: 1,
-            expected_chunks: &vec!(1)
+            expected_chunks: &vec!(0)
         },
         t3: Input {
-            in_s: "0111", // N = 2^2, (log_2(N))^2 = 4
+            // N = 2^2, (log_2(N))^2 = 4
+            byte_slice: &[0b0000_0111],
+            last_byte_len: 4,
             expected_chunk_size: 4,
-            expected_chunks: &vec!(3)
+            expected_chunks: &vec!(0)
         },
         t4: Input {
-            in_s: "0111_1101", // N = 2^3, (log_2(N))^2 = 9
+            // N = 2^3, (log_2(N))^2 = 9
+            byte_slice: &[0b0111_1101],
+            last_byte_len: 8,
             expected_chunk_size: 9,
             expected_chunks: &vec!(6)
         },
         t5: Input {
-            in_s: "0111_1101_1", // N = 2^3 + 1, (log_2(N))^2 = 9
+             // N = 2^3 + 1, (log_2(N))^2 = 9
+            byte_slice: &[0b0111_1101, 0b1000_0000],
+            last_byte_len: 1,
             expected_chunk_size: 9,
             expected_chunks: &vec!(7)
         },
         t6: Input {
-            in_s: "0111_1101_11", // N = 2^3 + 2, (log_2(N))^2 = 9
+            // N = 2^3 + 2, (log_2(N))^2 = 9
+            byte_slice: &[0b0111_1101, 0b1100_0000],
+            last_byte_len: 2,
             expected_chunk_size: 9,
             expected_chunks: &vec!(7, 8)
         },
 
         bugfix_11: Input {
-            in_s: "11", // N = 2^1, (log_2(N))^2 = 4
+            // N = 2^1, (log_2(N))^2 = 4
+            byte_slice: &[0b1100_0000],
+            last_byte_len: 2,
             expected_chunk_size: 1,
             expected_chunks: &vec!(1, 2)
         },
         bugfix_11110110_11010101_01000101_11101111_10101011_10100101_01100011_00110100_01010101_10010000_01001100_10111111_00110011_00111110_01110101_11011100: Input {
-            in_s: "11110110_11010101_01000101_11101111_10101011_10100101_0__1100011_00110100_01010101_10010000_01001100_10111111_00__110011_00111110_01110101_11011100", // N = 8 * 16 = 2^7, (log_2(N))^2 = 49
+            // N = 8 * 16 = 2^7, (log_2(N))^2 = 49
+            byte_slice: &[0b11110110, 0b11010101, 0b01000101, 0b11101111, 0b10101011, 0b10100101, 0b0_1100011, 0b00110100, 0b01010101, 0b10010000, 0b01001100, 0b10111111, 0b00_110011, 0b00111110, 0b01110101, 0b11011100],
+            last_byte_len: 8,
             expected_chunk_size: 49,
             expected_chunks: &vec!(30, 53, 72)
         },

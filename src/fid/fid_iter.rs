@@ -1,6 +1,6 @@
 use super::{Fid, FidIter};
 
-impl Fid {
+impl<'iter> Fid {
     /// Creates an iterator over FID's bit vector.
     ///
     /// # Examples
@@ -12,23 +12,15 @@ impl Fid {
     ///     assert_eq!(bit, fid[i as u64]);
     /// }
     /// ```
-    pub fn iter(&self) -> FidIter {
+    pub fn iter(&'iter self) -> FidIter<'iter> {
         FidIter { fid: self, i: 0 }
     }
 }
 
-impl<'a> IntoIterator for &'a Fid {
-    type Item = bool;
-    type IntoIter = FidIter<'a>;
-    fn into_iter(self) -> Self::IntoIter {
-        self.iter()
-    }
-}
-
-impl<'a> Iterator for FidIter<'a> {
+impl<'iter> Iterator for FidIter<'iter> {
     type Item = bool;
     fn next(&mut self) -> Option<Self::Item> {
-        if self.i >= self.fid.rbv.length() {
+        if self.i >= self.fid.len() {
             None
         } else {
             self.i += 1;

@@ -26,10 +26,15 @@ impl From<&str> for Fid {
     /// When:
     /// - `s` contains any character other than '0', '1', and '_'.
     /// - `s` does not contain any '0' or '1'
-    fn from(s: &str) -> Fid {
+    fn from(s: &str) -> Self {
         let bs = BitString::new(s);
-        let rbv = RawBitVector::from(bs);
-        Fid::from(rbv)
+        let bits: Vec<bool> = bs
+            .str()
+            .as_bytes()
+            .iter()
+            .map(|c| *c == '1' as u8)
+            .collect();
+        Self::from(&bits[..])
     }
 }
 
@@ -50,19 +55,23 @@ impl From<&[bool]> for Fid {
     ///
     /// # Panics
     /// When:
-    /// - `s` contains any character other than '0', '1', and '_'.
-    /// - `s` does not contain any '0' or '1'
-    fn from(bits: &[bool]) -> Fid {
-        let rbv = RawBitVector::from(bits);
-        Fid::from(rbv)
-    }
-}
+    /// - `bits` is empty.
+    fn from(bits: &[bool]) -> Self {
+        assert!(!bits.is_empty());
 
-impl From<RawBitVector> for Fid {
-    fn from(rbv: RawBitVector) -> Fid {
-        let chunks = Chunks::new(&rbv);
-        let table = PopcountTable::new(Blocks::calc_block_size(rbv.length()));
-        Fid { rbv, chunks, table }
+        let mut byte_vec: Vec<u8> = Vec::with_capacity(bits.len() / 8 + 1);
+        let mut last_byte_len = 0u8;
+
+        for bits8 in bits.chunks(8) {
+            last_byte_len = bits8.len() as u8; // although this bits8 might not be a last byte.
+
+            let byte = (0..last_byte_len).fold(0, |byte, i| {
+                byte + if bits8[i as usize] { 1 << (7 - i) } else { 0 }
+            });
+            byte_vec.push(byte);
+        }
+
+        Fid::build(byte_vec, last_byte_len)
     }
 }
 
@@ -77,7 +86,7 @@ impl Index<u64> for Fid {
     /// # Panics
     /// When _`i` >= length of the `Fid`_.
     fn index(&self, index: u64) -> &Self::Output {
-        if self.rbv.access(index) {
+        if self.rbv().access(index) {
             &TRUE
         } else {
             &FALSE
@@ -86,6 +95,20 @@ impl Index<u64> for Fid {
 }
 
 impl Fid {
+    /// Build FID from byte vector.
+    fn build(byte_vec: Vec<u8>, last_byte_len: u8) -> Self {
+        let bit_len = (byte_vec.len() - 1) as u64 * 8 + last_byte_len as u64;
+        let rbv = RawBitVector::new(&byte_vec[..], 0, last_byte_len);
+        let chunks = Chunks::new(&rbv);
+        let table = PopcountTable::new(Blocks::calc_block_size(rbv.len()));
+        Self {
+            byte_vec,
+            bit_len,
+            chunks,
+            table,
+        }
+    }
+
     /// Returns the number of _1_ in _[0, `i`]_ elements of the `Fid`.
     ///
     /// # Panics
@@ -117,7 +140,7 @@ impl Fid {
     /// 8. Get inner-block data _`block_bits`. `block_bits` must be of _block size_ length, fulfilled with _0_ in right bits.
     /// 9. Calculate _rank of `block_bits`_ in _O(1)_ using a table memonizing _block size_ bit's popcount.
     pub fn rank(&self, i: u64) -> u64 {
-        let n = self.rbv.length();
+        let n = self.len();
         assert!(i < n);
         let chunk_size = Chunks::calc_chunk_size(n);
         let block_size = Blocks::calc_block_size(n);
@@ -154,7 +177,7 @@ impl Fid {
         let pos_block_start = i_chunk * chunk_size as u64 + i_block * block_size as u64;
         assert!(i - pos_block_start < block_right.length() as u64);
         let block_right_rbv = self
-            .rbv
+            .rbv()
             .clone_sub(pos_block_start, block_right.length() as u64);
         let block_right_as_u32 = block_right_rbv.as_u32();
         let bits_to_use = i - pos_block_start + 1;
@@ -181,7 +204,7 @@ impl Fid {
     /// # Implementation detail
     /// Binary search using `rank()`.
     pub fn select(&self, num: u64) -> Option<u64> {
-        let n = self.rbv.length();
+        let n = self.len();
         assert!(num <= n);
 
         if num == 0 || num == 1 && self[0] == true {
@@ -209,7 +232,7 @@ impl Fid {
     /// # Panics
     /// When _`num` > length of the `Fid`_.
     pub fn select0(&self, num: u64) -> Option<u64> {
-        let n = self.rbv.length();
+        let n = self.bit_len;
         assert!(num <= n);
 
         if num == 0 || num == 1 && self[0] == false {
@@ -230,6 +253,24 @@ impl Fid {
             }
         }
         Some(ok)
+    }
+
+    /// Returns bit length of this FID.
+    pub fn len(&self) -> u64 {
+        self.bit_len
+    }
+
+    fn rbv(&self) -> RawBitVector {
+        let last_byte_len_or_0 = (self.bit_len % 8) as u8;
+        RawBitVector::new(
+            &self.byte_vec[..],
+            0,
+            if last_byte_len_or_0 == 0 {
+                8
+            } else {
+                last_byte_len_or_0
+            },
+        )
     }
 }
 
@@ -314,7 +355,13 @@ mod from_slice_success_tests {
 
 #[cfg(test)]
 mod from_slice_failure_tests {
-    // nothing to test
+    use crate::Fid;
+
+    #[test]
+    #[should_panic]
+    fn empty() {
+        Fid::from(&[][..]);
+    }
 }
 
 #[cfg(test)]
