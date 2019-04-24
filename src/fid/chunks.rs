@@ -140,17 +140,17 @@ mod new_success_tests {
         },
         t2: Input {
             // N = 1, (log_2(N))^2 = 1
-            byte_slice: &[0b0000_0001],
+            byte_slice: &[0b1000_0000],
             last_byte_len: 1,
             expected_chunk_size: 1,
-            expected_chunks: &vec!(0)
+            expected_chunks: &vec!(1)
         },
         t3: Input {
             // N = 2^2, (log_2(N))^2 = 4
-            byte_slice: &[0b0000_0111],
+            byte_slice: &[0b0111_0000],
             last_byte_len: 4,
             expected_chunk_size: 4,
-            expected_chunks: &vec!(0)
+            expected_chunks: &vec!(3)
         },
         t4: Input {
             // N = 2^3, (log_2(N))^2 = 9
