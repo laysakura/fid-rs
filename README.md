@@ -90,6 +90,16 @@ for bit in fid.iter() {
 // true
 ```
 
+### Utility Methods
+
+```rust
+use fid_rs::Fid;
+
+let fid = Fid::from("0100_1");
+
+assert_eq!(fid.len(), 5);
+```
+
 ## Features
 
 - **Arbitrary length support with minimum working memory**: fid-rs provides virtually _arbitrary size_ of FID. It is carefully designed to use as small memory space as possible.
