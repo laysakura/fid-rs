@@ -361,7 +361,7 @@ mod access_success_tests {
         t_1byte_off1_1: (&[0b01000000], 1, 7, 0, true),
         t_1byte_off1_2: (&[0b01000000], 1, 7, 1, false),
 
-        t_1byte_off7_1: (&[0b00000001], 7, 1, 0, true),
+        t_1byte_off7: (&[0b00000001], 7, 8, 0, true),
 
         t_2byte_1: (&[0b00000000, 0b00000001], 0, 8, 15, true),
         t_2byte_2: (&[0b00000000, 0b00000001], 1, 8, 14, true),
