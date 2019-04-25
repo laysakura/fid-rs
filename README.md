@@ -18,7 +18,7 @@ High performance FID (Fully Indexable Dictionary) library.
 
 ## Quickstart
 
-To use fid_rs, add the following to your `Cargo.toml` file:
+To use fid-rs, add the following to your `Cargo.toml` file:
 
 ```toml
 [dependencies]
