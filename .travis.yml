@@ -1,12 +1,4 @@
 language: rust
-rust:
-  - 1.33.0  # pinned stable Rust release
-  - stable
-  #- beta
-  #- nightly
-os:
-  - linux
-  - osx
 branches:
   only:
     - master
@@ -18,17 +10,25 @@ stages:
   - test
   - doc-bench-deploy
 
+# test stage
+rust:
+  - 1.33.0  # pinned stable Rust release
+  - stable
+  #- beta
+  #- nightly
+os:
+  - linux
+  - osx
+script:
+  - cargo build --release --verbose --all
+  - cargo test --release --verbose --all
+
 jobs:
   include:
     - stage: pr-check-fix
       rust: stable
       os: linux
       script: ./ci/pr-check-fix.sh
-
-    - stage: test
-      script:
-        - cargo build --release --verbose --all
-        - cargo test --release --verbose --all
 
     - stage: doc-bench-deploy
       rust: stable
