@@ -20,7 +20,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! fid-rs = "0.1"
+//! fid-rs = "0.1"  # NOTE: Replace to latest minor version.
 //! ```
 //!
 //! ## Usage Overview
