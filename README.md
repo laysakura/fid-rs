@@ -4,25 +4,25 @@ High performance FID (Fully Indexable Dictionary) library.
 
 [Master API Docs](https://laysakura.github.io/fid-rs/fid_rs/)
 |
-[Released API Docs](https://docs.rs/crate/fid_rs)
+[Released API Docs](https://docs.rs/crate/fid-rs)
 |
 [Benchmark Results](https://laysakura.github.io/fid-rs/criterion/report/)
 |
 [Changelog](https://github.com/laysakura/fid-rs/blob/master/CHANGELOG.md)
 
 [![Build Status](https://travis-ci.com/laysakura/fid-rs.svg?branch=master)](https://travis-ci.com/laysakura/fid-rs)
-[![Crates.io](https://img.shields.io/crates/v/fid_rs.svg)](https://crates.io/crates/fid_rs)
+[![Crates.io](https://img.shields.io/crates/v/fid-rs.svg)](https://crates.io/crates/fid-rs)
 [![Minimum rustc version](https://img.shields.io/badge/rustc-1.33+-lightgray.svg)](https://github.com/laysakura/fid-rs#rust-version-supports)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/laysakura/fid-rs/blob/master/LICENSE-MIT)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache_2.0-blue.svg)](https://github.com/laysakura/fid-rs/blob/master/LICENSE-APACHE)
 
 ## Quickstart
 
-To use fid-rs, add the following to your `Cargo.toml` file:
+To use fid_rs, add the following to your `Cargo.toml` file:
 
 ```toml
 [dependencies]
-fid_rs = "0.1"
+fid-rs = "0.1"
 ```
 
 ### Usage Overview
