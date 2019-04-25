@@ -24,8 +24,5 @@ harness = false
 
 [package.metadata.release]
 tag-prefix = "v"
-pre-release-replacements = [
-    {file="CHANGELOG.md", search="Unreleased", replace="{{version}}"},
-    {file="CHANGELOG.md", search="ReleaseDate", replace="{{date}}"},
-]
+pre-release-hook = ["emacs", "CHANGELOG.md"]  # Finally, I found this hook so effective!!
 disable-publish = true
