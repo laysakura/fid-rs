@@ -27,11 +27,12 @@ impl From<&str> for Fid {
     /// - `s` does not contain any '0' or '1'
     fn from(s: &str) -> Self {
         let bits: Vec<bool> = s
-            .chars()
+            .as_bytes()
+            .iter()
             .filter_map(|c| match c {
-                '0' => Some(false),
-                '1' => Some(true),
-                '_' => None,
+                48 /* '0' */ => Some(false),
+                49 /* '1' */ => Some(true),
+                95 /* '_' */ => None,
                 _ => panic!("`s` must consist of '0' or '1'. '{}' included.", c),
             })
             .collect();
