@@ -1,68 +1,70 @@
-use crate::internal_data_structure::bit_string::BitString;
 use std::fmt;
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(Debug)]
 /// Bit vector of arbitrary length (actually the length is limited to _[1, 2^64)_).
-pub struct RawBitVector {
-    byte_vec: Vec<u8>,
+///
+/// ```text
+/// When fist_byte_offset = 2, last_byte_len = 2:
+///
+/// 10101010 00000000 11111111
+///   |  effective bits |
+/// ```
+pub struct RawBitVector<'s> {
+    byte_slice: &'s [u8],
+    first_byte_offset: u8,
+
+    /// Length used in last byte.
+    /// Although byte_slice has only 1 byte and first_byte_offset > 0,
+    /// this var can take up to 8.
     last_byte_len: u8,
 }
 
-impl From<BitString> for RawBitVector {
-    /// Makes a bit vector from `BitString` representation.
-    fn from(bs: BitString) -> RawBitVector {
-        let mut rbv = RawBitVector::from_length(bs.str().len() as u64);
-        for (i, c) in bs.str().chars().enumerate() {
-            if c == '1' {
-                rbv.set_bit(i as u64);
-            };
-        }
-        rbv
-    }
-}
-
-impl From<&[bool]> for RawBitVector {
-    /// Makes a bit vector from slice of boolean.
-    fn from(bits: &[bool]) -> RawBitVector {
-        let mut rbv = RawBitVector::from_length(bits.len() as u64);
-        for (i, bit) in bits.iter().enumerate() {
-            if *bit {
-                rbv.set_bit(i as u64);
-            };
-        }
-        rbv
-    }
-}
-
-impl RawBitVector {
-    /// Makes a bit vector of `length`, willed with 0.
+impl<'s> RawBitVector<'s> {
+    /// Constructor
     ///
     /// # Panics
-    /// When _`length` == 0_.
-    fn from_length(length: u64) -> RawBitVector {
-        assert!(length > 0, "length must be > 0.");
-
-        let last_byte_len_or_0 = (length % 8) as u8;
-        let last_byte_len = if last_byte_len_or_0 == 0 {
-            8
-        } else {
-            last_byte_len_or_0
-        };
-
-        RawBitVector {
-            byte_vec: vec![0; ((length - 1) / 8 + 1) as usize],
+    /// When:
+    /// - `byte_slice` is empty.
+    /// - _`first_byte_offset` >= 8_.
+    /// - _`last_byte_len` == 0 || `last_byte_len` > 8_.
+    /// - _`byte_slice.len() == 1 && first_byte_offset >= last_byte_len`_
+    pub fn new(byte_slice: &'s [u8], first_byte_offset: u8, last_byte_len: u8) -> Self {
+        assert!(!byte_slice.is_empty());
+        assert!(first_byte_offset < 8);
+        assert!(0 < last_byte_len && last_byte_len <= 8);
+        assert!(!(byte_slice.len() == 1 && first_byte_offset >= last_byte_len));
+        Self {
+            byte_slice,
+            first_byte_offset,
             last_byte_len,
         }
     }
 
     /// Returns i-th bit.
     ///
+    /// ```text
+    /// When i=7:
+    ///
+    ///          |target |
+    /// 00000000 01000000
+    ///   ^       ^
+    /// offset=2  |
+    ///  i=0     i=7
+    ///        abs_i=9
+    ///
+    /// abs_i = offset + i
+    /// target_byte = at [abs_i / 8]
+    /// access(i) = target_byte[abs_i % 8]
+    /// ```
+    ///
     /// # Panics
-    /// When _`i` >= `self.length()`_.
+    /// When _`i` >= `self.len()`_.
     pub fn access(&self, i: u64) -> bool {
-        self.validate_index(i);
-        let byte = self.byte_vec[(i / 8) as usize];
-        match i % 8 {
+        assert!(i < self.len());
+
+        let abs_i = self.first_byte_offset as u64 + i;
+        let byte = self.byte_slice[(abs_i / 8) as usize];
+        match abs_i % 8 {
             0 => byte & 0b1000_0000 != 0,
             1 => byte & 0b0100_0000 != 0,
             2 => byte & 0b0010_0000 != 0,
@@ -75,150 +77,147 @@ impl RawBitVector {
         }
     }
 
-    /// Set 1 to i-th bit.
-    ///
-    /// # Panics
-    /// When _`i` >= `self.length()`_.
-    pub fn set_bit(&mut self, i: u64) {
-        self.validate_index(i);
-        let byte = self.byte_vec[(i / 8) as usize];
-        self.byte_vec[(i / 8) as usize] = match i % 8 {
-            0 => byte | 0b1000_0000,
-            1 => byte | 0b0100_0000,
-            2 => byte | 0b0010_0000,
-            3 => byte | 0b0001_0000,
-            4 => byte | 0b0000_1000,
-            5 => byte | 0b0000_0100,
-            6 => byte | 0b0000_0010,
-            7 => byte | 0b0000_0001,
-            _ => panic!("never happen"),
-        }
-    }
-
     /// Returns length.
-    pub fn length(&self) -> u64 {
-        (self.byte_vec.len() as u64 - 1) * 8 + (self.last_byte_len as u64)
+    pub fn len(&self) -> u64 {
+        if self.byte_slice.len() == 1 {
+            self.last_byte_len as u64 - self.first_byte_offset as u64
+        } else {
+            (self.byte_slice.len() as u64) * 8
+                - (self.first_byte_offset as u64)
+                - (8 - self.last_byte_len as u64)
+        }
     }
 
     /// Returns popcount of whole this bit vector.
     pub fn popcount(&self) -> u64 {
-        self.byte_vec
+        let mut popcnt = self
+            .byte_slice
             .iter()
-            .fold(0, |popcnt: u64, byte| byte.count_ones() as u64 + popcnt)
+            .fold(0, |popcnt: u64, byte| byte.count_ones() as u64 + popcnt);
+
+        // remove 1s in the left of first_byte_offset
+        let left_1s_byte = match self.first_byte_offset {
+            0 => 0b00000000 & self.byte_slice[0],
+            1 => 0b10000000 & self.byte_slice[0],
+            2 => 0b11000000 & self.byte_slice[0],
+            3 => 0b11100000 & self.byte_slice[0],
+            4 => 0b11110000 & self.byte_slice[0],
+            5 => 0b11111000 & self.byte_slice[0],
+            6 => 0b11111100 & self.byte_slice[0],
+            7 => 0b11111110 & self.byte_slice[0],
+            _ => panic!("never happen"),
+        };
+        popcnt -= left_1s_byte.count_ones() as u64;
+
+        // remove 1s in the left of last_byte_len
+        let last_byte = self.byte_slice.last().unwrap();
+        let last_offset = self.last_byte_len - 1;
+        let right_1s_byte = match last_offset {
+            0 => 0b01111111 & last_byte,
+            1 => 0b00111111 & last_byte,
+            2 => 0b00011111 & last_byte,
+            3 => 0b00001111 & last_byte,
+            4 => 0b00000111 & last_byte,
+            5 => 0b00000011 & last_byte,
+            6 => 0b00000001 & last_byte,
+            7 => 0b00000000 & last_byte,
+            _ => panic!("never happen"),
+        };
+        popcnt -= right_1s_byte.count_ones() as u64;
+
+        popcnt
     }
 
     /// Makes another RawBitVector from _[`i`, `i` + `size`)_ of self.
+    /// This method is inexpensive in that it does not copy internal bit vector.
+    ///
+    /// ```text
+    /// offset=2
+    ///   |
+    ///   v  |     size=14         |
+    /// 00000000    00000000    00000000
+    ///      ^                    ^
+    ///  i_start=3             i_end=16
+    ///  abs_i_start=5         abs_i_end=18
+    /// | first|                |  last |
+    ///
+    ///
+    /// When i=3 & size=14:
+    ///
+    /// i_start = 3
+    /// abs_i_start = i_start + offset = 5
+    /// i_end = i_start + size - 1 = 16
+    /// abs_i_end = i_end + offset = 18
+    ///
+    /// first_byte = at [abs_i_start / 8]
+    /// last_byte = at [abs_i_end / 8]
+    ///
+    /// new_offset = abs_i_start % 8
+    ///
+    /// new_last_byte_len = abs_i_end % 8 + 1
+    /// ```
     ///
     /// # Panics
     /// When:
-    /// - _`i` + `size` >= `self.length()`_
     /// - _`size` == 0_
-    pub fn copy_sub(&self, i: u64, size: u64) -> RawBitVector {
-        self.validate_index(i);
-        assert!(
-            i + size <= self.length(),
-            "i + size must be <= self.length(); i = {}, size = {}, self.length() = {}",
-            i,
-            size,
-            self.length()
-        );
+    /// - _`size` > `self.len`_
+    /// - _`abs_i_end` / 8 + 1 == `self.byte_slice.len()` && abs_i_end` % 8 >= `last_byte_len`_
+    pub fn clone_sub(&self, i: u64, size: u64) -> Self {
         assert!(size > 0, "length must be > 0");
+        assert!(size <= self.len());
 
-        let mut sub_byte_vec: Vec<u8> = Vec::with_capacity(size as usize / 8 + 1);
+        let i_start = i;
+        let abs_i_start = i_start + self.first_byte_offset as u64;
+        let i_end = i_start + size - 1;
+        let abs_i_end = i_end + self.first_byte_offset as u64;
+        assert!(
+            abs_i_end / 8 + 1 < self.byte_slice.len() as u64
+                || abs_i_end % 8 < self.last_byte_len as u64
+        );
 
-        // Memo for implementation:
-        // Assume self.byte_vec == 00000000 11111111 00000000 11111
-        //
-        // 00000000 11111111 00000000 11111
-        //        ^                     ^
-        //        i=7                   i+size = 7+19 = 26
-        //      (start)                 (end)
-        //
-        // Copy [start, end).
-        //
-        // Use j for iterator:
-        //   j = start, start+8, ..., start+16 (>= end - 8)
-        let start = i;
-        let end = start + size;
-
-        if start % 8 == 0 {
-            for j in (start..end).step_by(8) {
-                // Copy 1~8 bits from a single byte in self.byte_vec.
-                let byte = self.byte_vec[j as usize / 8];
-                let right_bits_to_discard = if end - j >= 8 { 0 } else { 8 - (end - j) };
-                let copied_byte = (byte >> right_bits_to_discard) << right_bits_to_discard;
-                sub_byte_vec.push(copied_byte);
-            }
-        } else {
-            let left_bits_to_discard_from_byte1 = start % 8;
-            let right_bits_to_discard_from_byte2 = 8 - left_bits_to_discard_from_byte1;
-
-            for j in (start..end).step_by(8) {
-                // Copy 1~8 bits from 2 byte in self.byte_vec (second byte can be a sentinel).
-                let i_byte1 = j as usize / 8;
-                let byte1 = self.byte_vec[i_byte1];
-                let byte2 = if i_byte1 + 1 < self.byte_vec.len() {
-                    self.byte_vec[i_byte1 + 1]
-                } else {
-                    0u8
-                };
-
-                let copied_byte = (byte1 << left_bits_to_discard_from_byte1)
-                    | (byte2 >> right_bits_to_discard_from_byte2);
-                let right_bits_to_discard_from_copied_byte =
-                    if end - j >= 8 { 0 } else { 8 - (end - j) };
-                let copied_byte = copied_byte >> right_bits_to_discard_from_copied_byte
-                    << right_bits_to_discard_from_copied_byte;
-                sub_byte_vec.push(copied_byte);
-            }
-        }
-
-        RawBitVector {
-            byte_vec: sub_byte_vec,
-            last_byte_len: if size % 8 == 0 { 8 } else { (size % 8) as u8 },
+        Self {
+            byte_slice: &self.byte_slice[(abs_i_start as usize / 8)..=(abs_i_end as usize / 8)],
+            first_byte_offset: (abs_i_start % 8) as u8,
+            last_byte_len: (abs_i_end % 8 + 1) as u8,
         }
     }
 
-    /// Returns a concatenated number of `self.byte_vec[0, 3]`.
+    /// Returns a concatenated number of first 32bits.
     ///
     /// # Panics
-    /// If _`self.byte_vec.len()` > 4_
+    /// If _`self.len()` > 32_
     pub fn as_u32(&self) -> u32 {
-        assert!(
-            self.byte_vec.len() <= 4,
-            "self.byte_vec.len() = {} must be <= 4",
-            self.byte_vec.len()
-        );
-        let bv = &self.byte_vec;
+        assert!(self.len() <= 32);
 
-        let byte0 = if bv.len() > 0 { bv[0] as u32 } else { 0u32 };
-        let byte1 = if bv.len() > 1 { bv[1] as u32 } else { 0u32 };
-        let byte2 = if bv.len() > 2 { bv[2] as u32 } else { 0u32 };
-        let byte3 = if bv.len() > 3 { bv[3] as u32 } else { 0u32 };
+        let bs = self.byte_slice;
+        let off = self.first_byte_offset;
 
-        (byte0 << 24) | (byte1 << 16) | (byte2 << 8) | byte3
-    }
+        assert!(bs.len() <= 5);
+        let mut a = [0u32; 5];
+        for i in 0..bs.len() {
+            a[i] = bs[i] as u32;
+        }
+        // discard 1s in the last byte
+        a[bs.len() - 1] = a[bs.len() - 1] >> (8 - self.last_byte_len) << (8 - self.last_byte_len);
 
-    /// # Panics
-    /// When _`i` >= `self.length()`_.
-    fn validate_index(&self, i: u64) {
-        assert!(
-            i < self.length(),
-            "`i` must be smaller than {} (length of RawBitVector)",
-            self.length()
-        );
+        let mut byte = [0u32; 4];
+        for i in 0..4 {
+            byte[i] = (a[i] << off) + (a[i + 1] >> (8 - off));
+        }
+
+        (byte[0] << 24) | (byte[1] << 16) | (byte[2] << 8) | byte[3]
     }
 }
 
-impl fmt::Display for RawBitVector {
+impl<'s> fmt::Display for RawBitVector<'s> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let bits_str = self
-            .byte_vec
+            .byte_slice
             .iter()
             .enumerate()
             .map(|(i, byte)| {
                 let byte_s = format!("{: >8}", format!("{:b}", byte)).replace(' ', "0");
-                if i < self.byte_vec.len() - 1 {
+                if i < self.byte_slice.len() - 1 {
                     byte_s
                 } else {
                     byte_s
@@ -235,209 +234,146 @@ impl fmt::Display for RawBitVector {
 }
 
 #[cfg(test)]
-mod from_length_success_tests {
+mod new_success_tests {
     use super::RawBitVector;
-
-    struct IndexBitPair(u64, bool);
 
     macro_rules! parameterized_tests {
         ($($name:ident: $value:expr,)*) => {
         $(
             #[test]
             fn $name() {
-                let (in_length, index_bit_pairs) = $value;
-                let rbv = RawBitVector::from_length(in_length);
-                for IndexBitPair(i, bit) in index_bit_pairs {
-                    assert_eq!(rbv.access(i), bit);
-                }
+                let (byte_slice, first_byte_offset, last_byte_len) = $value;
+                let _ = RawBitVector::new(byte_slice, first_byte_offset, last_byte_len);
             }
         )*
         }
     }
 
     parameterized_tests! {
-        t1: (1, vec!(
-                     IndexBitPair(0, false),
-                )),
-        t2: (2, vec!(
-                     IndexBitPair(0, false),
-                     IndexBitPair(1, false),
-                )),
-        t8: (8, vec!(
-                     IndexBitPair(0, false),
-                     IndexBitPair(1, false),
-                     IndexBitPair(2, false),
-                     IndexBitPair(3, false),
-                     IndexBitPair(4, false),
-                     IndexBitPair(5, false),
-                     IndexBitPair(6, false),
-                     IndexBitPair(7, false),
-                )),
-        t9: (9, vec!(
-                     IndexBitPair(0, false),
-                     IndexBitPair(1, false),
-                     IndexBitPair(2, false),
-                     IndexBitPair(3, false),
-                     IndexBitPair(4, false),
-                     IndexBitPair(5, false),
-                     IndexBitPair(6, false),
-                     IndexBitPair(7, false),
-                     IndexBitPair(8, false),
-                )),
+        t_1byte_1: (&[0b00000000], 0, 8),
+        t_1byte_2: (&[0b00000000], 1, 8),
+        t_1byte_3: (&[0b00000000], 2, 8),
+        t_1byte_4: (&[0b00000000], 3, 8),
+        t_1byte_5: (&[0b00000000], 4, 8),
+        t_1byte_6: (&[0b00000000], 5, 8),
+        t_1byte_7: (&[0b00000000], 6, 8),
+        t_1byte_8: (&[0b00000000], 7, 8),
     }
 }
 
 #[cfg(test)]
-mod from_length_failure_tests {
+mod new_failure_tests {
     use super::RawBitVector;
 
-    #[test]
-    #[should_panic]
-    fn empty() {
-        let _ = RawBitVector::from_length(0);
+    macro_rules! parameterized_tests {
+        ($($name:ident: $value:expr,)*) => {
+        $(
+            #[test]
+            #[should_panic]
+            fn $name() {
+                let (byte_slice, first_byte_offset, last_byte_len) = $value;
+                let _ = RawBitVector::new(byte_slice, first_byte_offset, last_byte_len);
+            }
+        )*
+        }
+    }
+
+    parameterized_tests! {
+        t_empty: (&[], 0, 1),
+        t_offset: (&[0b00000000], 8, 1),
+
+        t_last_len_0: (&[0b00000000], 0, 0),
+        t_last_len_9: (&[0b00000000, 0b00000000], 0, 9),
+
+        t_1byte_1: (&[0b00000000], 0, 9),
+
+        t_1byte_off7: (&[0b00000001], 7, 7),
     }
 }
 
 #[cfg(test)]
-mod from_bit_string_success_tests {
-    use super::super::bit_string::BitString;
+mod len_success_tests {
     use super::RawBitVector;
-
-    struct IndexBitPair(u64, bool);
 
     macro_rules! parameterized_tests {
         ($($name:ident: $value:expr,)*) => {
         $(
             #[test]
             fn $name() {
-                let (in_s, index_bit_pairs) = $value;
-                let rbv = RawBitVector::from(BitString::new(in_s));
-                for IndexBitPair(i, bit) in index_bit_pairs {
-                    assert_eq!(rbv.access(i), bit);
-                }
+                let (byte_slice, first_byte_offset, last_byte_len, expected_len) = $value;
+                let rbv = RawBitVector::new(byte_slice, first_byte_offset, last_byte_len);
+                assert_eq!(rbv.len(), expected_len);
             }
         )*
         }
     }
 
     parameterized_tests! {
-        t1_1: ("0", vec!(
-                         IndexBitPair(0, false),
-                    )),
-        t1_2: ("1", vec!(
-                         IndexBitPair(0, true),
-                    )),
+        t_1byte_off0_1: (&[0b00000000], 0, 8, 8),
+        t_1byte_off0_2: (&[0b00000000], 0, 7, 7),
+        t_1byte_off0_3: (&[0b00000000], 0, 6, 6),
+        t_1byte_off0_4: (&[0b00000000], 0, 5, 5),
+        t_1byte_off0_5: (&[0b00000000], 0, 4, 4),
+        t_1byte_off0_6: (&[0b00000000], 0, 3, 3),
+        t_1byte_off0_7: (&[0b00000000], 0, 2, 2),
+        t_1byte_off0_8: (&[0b00000000], 0, 1, 1),
 
-        t2_1: ("00", vec!(
-                          IndexBitPair(0, false),
-                          IndexBitPair(1, false),
-                     )),
-        t2_2: ("01", vec!(
-                          IndexBitPair(0, false),
-                          IndexBitPair(1, true),
-                     )),
-        t2_3: ("10", vec!(
-                          IndexBitPair(0, true),
-                          IndexBitPair(1, false),
-                     )),
-        t2_4: ("11", vec!(
-                          IndexBitPair(0, true),
-                          IndexBitPair(1, true),
-                     )),
+        t_1byte_off1_1: (&[0b00000000], 1, 8, 7),
+        t_1byte_off1_2: (&[0b00000000], 1, 7, 6),
+        t_1byte_off1_3: (&[0b00000000], 1, 6, 5),
+        t_1byte_off1_4: (&[0b00000000], 1, 5, 4),
+        t_1byte_off1_5: (&[0b00000000], 1, 4, 3),
+        t_1byte_off1_6: (&[0b00000000], 1, 3, 2),
+        t_1byte_off1_7: (&[0b00000000], 1, 2, 1),
 
-        t8_1: ("00000000", vec!(
-                                IndexBitPair(0, false),
-                                IndexBitPair(1, false),
-                                IndexBitPair(2, false),
-                                IndexBitPair(3, false),
-                                IndexBitPair(4, false),
-                                IndexBitPair(5, false),
-                                IndexBitPair(6, false),
-                                IndexBitPair(7, false),
-                           )),
-        t8_2: ("11111111", vec!(
-                                IndexBitPair(0, true),
-                                IndexBitPair(1, true),
-                                IndexBitPair(2, true),
-                                IndexBitPair(3, true),
-                                IndexBitPair(4, true),
-                                IndexBitPair(5, true),
-                                IndexBitPair(6, true),
-                                IndexBitPair(7, true),
-                           )),
-        t8_3: ("01010101", vec!(
-                                IndexBitPair(0, false),
-                                IndexBitPair(1, true),
-                                IndexBitPair(2, false),
-                                IndexBitPair(3, true),
-                                IndexBitPair(4, false),
-                                IndexBitPair(5, true),
-                                IndexBitPair(6, false),
-                                IndexBitPair(7, true),
-                           )),
+        t_1byte_off7_1: (&[0b00000000], 7, 8, 1),
 
-        t9_1: ("00000000_0", vec!(
-                                 IndexBitPair(0, false),
-                                 IndexBitPair(1, false),
-                                 IndexBitPair(2, false),
-                                 IndexBitPair(3, false),
-                                 IndexBitPair(4, false),
-                                 IndexBitPair(5, false),
-                                 IndexBitPair(6, false),
-                                 IndexBitPair(7, false),
-                                 IndexBitPair(8, false),
-                            )),
-        t9_2: ("11111111_1", vec!(
-                                 IndexBitPair(0, true),
-                                 IndexBitPair(1, true),
-                                 IndexBitPair(2, true),
-                                 IndexBitPair(3, true),
-                                 IndexBitPair(4, true),
-                                 IndexBitPair(5, true),
-                                 IndexBitPair(6, true),
-                                 IndexBitPair(7, true),
-                                 IndexBitPair(8, true),
-                            )),
-        t9_3: ("10101010_1", vec!(
-                                 IndexBitPair(0, true),
-                                 IndexBitPair(1, false),
-                                 IndexBitPair(2, true),
-                                 IndexBitPair(3, false),
-                                 IndexBitPair(4, true),
-                                 IndexBitPair(5, false),
-                                 IndexBitPair(6, true),
-                                 IndexBitPair(7, false),
-                                 IndexBitPair(8, true),
-                            )),
+        t_2byte_1: (&[0b00000000, 0b00000000], 0, 8, 16),
+        t_2byte_2: (&[0b00000000, 0b00000000], 1, 8, 15),
+        t_2byte_3: (&[0b00000000, 0b00000000], 7, 8, 9),
+        t_2byte_4: (&[0b00000000, 0b00000000], 0, 1, 9),
+        t_2byte_5: (&[0b00000000, 0b00000000], 0, 7, 15),
+        t_2byte_6: (&[0b00000000, 0b00000000], 7, 1, 2),
     }
 }
 
 #[cfg(test)]
-mod from_bit_string_failure_tests {
-    // well-tested in BitString
-}
-
-#[cfg(test)]
-mod length_success_tests {
-    use super::RawBitVector;
-
-    #[test]
-    fn test() {
-        for length in 1..=1 << 16 {
-            let rbv = RawBitVector::from_length(length);
-            assert_eq!(rbv.length(), length);
-        }
-    }
-}
-
-#[cfg(test)]
-mod length_failure_tests {
+mod len_failure_tests {
     // Nothing to do
 }
 
 #[cfg(test)]
 mod access_success_tests {
-    // well-tested in from_length_success_tests & from_bit_string_success_tests
+    use super::RawBitVector;
+
+    macro_rules! parameterized_tests {
+        ($($name:ident: $value:expr,)*) => {
+        $(
+            #[test]
+            fn $name() {
+                let (byte_slice, first_byte_offset, last_byte_len, i, expected_bit) = $value;
+                let rbv = RawBitVector::new(byte_slice, first_byte_offset, last_byte_len);
+                assert_eq!(rbv.access(i), expected_bit);
+            }
+        )*
+        }
+    }
+
+    parameterized_tests! {
+        t_1byte_off0_1: (&[0b10000000], 0, 8, 0, true),
+
+        t_1byte_off1_1: (&[0b01000000], 1, 7, 0, true),
+        t_1byte_off1_2: (&[0b01000000], 1, 7, 1, false),
+
+        t_1byte_off7: (&[0b00000001], 7, 8, 0, true),
+
+        t_2byte_1: (&[0b00000000, 0b00000001], 0, 8, 15, true),
+        t_2byte_2: (&[0b00000000, 0b00000001], 1, 8, 14, true),
+        t_2byte_3: (&[0b00000000, 0b00000001], 7, 8, 8, true),
+        t_2byte_4: (&[0b00000000, 0b10000000], 0, 1, 8, true),
+        t_2byte_5: (&[0b00000000, 0b00000010], 0, 7, 14, true),
+        t_2byte_6: (&[0b00000000, 0b10000000], 7, 1, 1, true),
+    }
 }
 
 #[cfg(test)]
@@ -447,22 +383,24 @@ mod access_failure_tests {
     #[test]
     #[should_panic]
     fn over_upper_bound() {
-        let rbv = RawBitVector::from_length(2);
-        let _ = rbv.access(2);
+        let rbv = RawBitVector::new(&[0b00000000], 1, 2);
+        let _ = rbv.access(1);
+
+        // basically, well-tested in len_success_tests
     }
 }
 
 #[cfg(test)]
 mod popcount_success_tests {
-    use super::{BitString, RawBitVector};
+    use super::RawBitVector;
 
     macro_rules! parameterized_tests {
         ($($name:ident: $value:expr,)*) => {
         $(
             #[test]
             fn $name() {
-                let (in_s, expected_popcount) = $value;
-                let rbv = RawBitVector::from(BitString::new(in_s));
+                let (byte_slice, first_byte_offset, last_byte_len, expected_popcount) = $value;
+                let rbv = RawBitVector::new(byte_slice, first_byte_offset, last_byte_len);
                 assert_eq!(rbv.popcount(), expected_popcount);
             }
         )*
@@ -470,17 +408,18 @@ mod popcount_success_tests {
     }
 
     parameterized_tests! {
-        t1_1: ("0", 0),
+        t1: (&[0b11111111], 0, 1, 1),
+        t2: (&[0b11111111], 1, 8, 7),
+        t3: (&[0b11111111], 1, 7, 6),
+        t4: (&[0b11111111], 1, 6, 5),
+        t5: (&[0b11101111], 0, 8, 7),
 
-        t8_1: ("00000000", 0),
-        t8_2: ("01010101", 4),
-        t8_3: ("10101010", 4),
-        t8_4: ("11111111", 8),
+        t6: (&[0b01010101, 0b01111111], 0, 1, 4),
+        t7: (&[0b10101010, 0b11111111], 0, 1, 5),
+        t8: (&[0b11111111, 0b11111111], 0, 1, 9),
+        t9: (&[0b11111111, 0b11111111], 1, 1, 8),
 
-        t9_1: ("00000000_0", 0),
-        t9_2: ("01010101_0", 4),
-        t9_3: ("10101010_1", 5),
-        t9_4: ("11111111_1", 9),
+        t10: (&[0b11111111, 0b00010000, 0b11111111], 7, 1, 3),
     }
 }
 
@@ -490,126 +429,21 @@ mod popcount_failure_tests {
 }
 
 #[cfg(test)]
-mod set_bit_success_tests {
-    use super::super::bit_string::BitString;
+mod clone_sub_success_tests {
     use super::RawBitVector;
-
-    struct IndexBitPair(u64, bool);
 
     macro_rules! parameterized_tests {
         ($($name:ident: $value:expr,)*) => {
         $(
             #[test]
             fn $name() {
-                let (in_s, bits_to_set, index_bit_pairs) = $value;
-                let mut rbv = RawBitVector::from(BitString::new(in_s));
+                let (byte_slice, first_byte_offset, last_byte_len, i, size, expected_bit_vec) = $value;
+                let rbv = RawBitVector::new(byte_slice, first_byte_offset, last_byte_len);
+                let cloned_rbv = rbv.clone_sub(i, size);
 
-                for i in bits_to_set { rbv.set_bit(i) }
-
-                for IndexBitPair(i, bit) in index_bit_pairs {
-                    assert_eq!(rbv.access(i), bit);
-                }
-            }
-        )*
-        }
-    }
-
-    parameterized_tests! {
-        t1_1: ("0", vec!(),
-               vec!(
-                    IndexBitPair(0, false),
-                   )),
-        t1_2: ("0", vec!(0),
-               vec!(
-                    IndexBitPair(0, true),
-                   )),
-        t1_3: ("0", vec!(0, 0),
-               vec!(
-                    IndexBitPair(0, true),
-                   )),
-        t1_4: ("1", vec!(0),
-               vec!(
-                    IndexBitPair(0, true),
-                   )),
-
-        t8_1: ("00000000", vec!(),
-               vec!(
-                    IndexBitPair(0, false),
-                    IndexBitPair(1, false),
-                    IndexBitPair(2, false),
-                    IndexBitPair(3, false),
-                    IndexBitPair(4, false),
-                    IndexBitPair(5, false),
-                    IndexBitPair(6, false),
-                    IndexBitPair(7, false),
-                   )),
-        t8_2: ("00000000", vec!(0, 2, 4, 6),
-               vec!(
-                    IndexBitPair(0, true),
-                    IndexBitPair(1, false),
-                    IndexBitPair(2, true),
-                    IndexBitPair(3, false),
-                    IndexBitPair(4, true),
-                    IndexBitPair(5, false),
-                    IndexBitPair(6, true),
-                    IndexBitPair(7, false),
-                   )),
-
-        t9_1: ("00000000_0", vec!(),
-               vec!(
-                    IndexBitPair(0, false),
-                    IndexBitPair(1, false),
-                    IndexBitPair(2, false),
-                    IndexBitPair(3, false),
-                    IndexBitPair(4, false),
-                    IndexBitPair(5, false),
-                    IndexBitPair(6, false),
-                    IndexBitPair(7, false),
-                    IndexBitPair(8, false),
-                   )),
-        t9_2: ("00000000_0", vec!(0, 2, 4, 6, 8),
-               vec!(
-                    IndexBitPair(0, true),
-                    IndexBitPair(1, false),
-                    IndexBitPair(2, true),
-                    IndexBitPair(3, false),
-                    IndexBitPair(4, true),
-                    IndexBitPair(5, false),
-                    IndexBitPair(6, true),
-                    IndexBitPair(7, false),
-                    IndexBitPair(8, true),
-                   )),
-    }
-}
-
-#[cfg(test)]
-mod set_bit_failure_tests {
-    use super::RawBitVector;
-
-    #[test]
-    #[should_panic]
-    fn set_bit_over_upper_bound() {
-        let mut rbv = RawBitVector::from_length(2);
-        rbv.set_bit(2);
-    }
-}
-
-#[cfg(test)]
-mod copy_sub_success_tests {
-    use super::{BitString, RawBitVector};
-
-    macro_rules! parameterized_tests {
-        ($($name:ident: $value:expr,)*) => {
-        $(
-            #[test]
-            fn $name() {
-                let (s, i, size, expected_bit_vec) = $value;
-                let rbv = RawBitVector::from(BitString::new(s));
-                let copied_rbv = rbv.copy_sub(i, size);
-
-                assert_eq!(copied_rbv.length(), expected_bit_vec.len() as u64);
+                assert_eq!(cloned_rbv.len(), expected_bit_vec.len() as u64);
                 for (i, expected_bit) in expected_bit_vec.iter().enumerate() {
-                    assert_eq!(copied_rbv.access(i as u64), *expected_bit);
+                    assert_eq!(cloned_rbv.access(i as u64), *expected_bit);
                 }
             }
         )*
@@ -617,41 +451,51 @@ mod copy_sub_success_tests {
     }
 
     parameterized_tests! {
-        t1_1: ("0", 0, 1, vec![false]),
+        t1_1: (&[0b01000000], 0, 1, 0, 1, vec![false]),
+        t1_2: (&[0b01000000], 1, 2, 0, 1, vec![true]),
 
-        t8_1_1: ("01000101", 0, 1, vec![false]),
-        t8_1_2: ("01000101", 0, 2, vec![false, true]),
-        t8_1_3: ("01000101", 0, 3, vec![false, true, false]),
-        t8_1_4: ("01000101", 0, 4, vec![false, true, false, false]),
-        t8_1_5: ("01000101", 0, 5, vec![false, true, false, false, false]),
-        t8_1_6: ("01000101", 0, 6, vec![false, true, false, false, false, true]),
-        t8_1_7: ("01000101", 0, 7, vec![false, true, false, false, false, true, false]),
-        t8_1_8: ("01000101", 0, 8, vec![false, true, false, false, false, true, false, true]),
+        t8_1_1: (&[0b01000101], 0, 8, 0, 1, vec![false]),
+        t8_1_2: (&[0b01000101], 0, 8, 0, 2, vec![false, true]),
+        t8_1_3: (&[0b01000101], 0, 8, 0, 3, vec![false, true, false]),
+        t8_1_4: (&[0b01000101], 0, 8, 0, 4, vec![false, true, false, false]),
+        t8_1_5: (&[0b01000101], 0, 8, 0, 5, vec![false, true, false, false, false]),
+        t8_1_6: (&[0b01000101], 0, 8, 0, 6, vec![false, true, false, false, false, true]),
+        t8_1_7: (&[0b01000101], 0, 8, 0, 7, vec![false, true, false, false, false, true, false]),
+        t8_1_8: (&[0b01000101], 0, 8, 0, 8, vec![false, true, false, false, false, true, false, true]),
+        t8_1_9: (&[0b01000101, 0b10000000], 1, 1, 0, 8, vec![true, false, false, false, true, false, true, true]),
 
-        t8_2_1: ("01000101", 7, 1, vec![true]),
+        t8_2_1: (&[0b01000101], 0, 8, 7, 1, vec![true]),
+        t8_2_2: (&[0b01000101, 0b10000000], 1, 1, 6, 2, vec![true, true]),
+        t8_2_3: (&[0b01000101, 0b10000000], 1, 1, 7, 1, vec![true]),
 
-        t9_1_1: ("01000101_0", 0, 1, vec![false]),
-        t9_1_2: ("01000101_0", 0, 2, vec![false, true]),
-        t9_1_3: ("01000101_0", 0, 3, vec![false, true, false]),
-        t9_1_4: ("01000101_0", 0, 4, vec![false, true, false, false]),
-        t9_1_5: ("01000101_0", 0, 5, vec![false, true, false, false, false]),
-        t9_1_6: ("01000101_0", 0, 6, vec![false, true, false, false, false, true]),
-        t9_1_7: ("01000101_0", 0, 7, vec![false, true, false, false, false, true, false]),
-        t9_1_8: ("01000101_0", 0, 8, vec![false, true, false, false, false, true, false, true]),
-        t9_1_9: ("01000101_0", 0, 9, vec![false, true, false, false, false, true, false, true, false]),
+        t9_1_1: (&[0b01000101, 0b10000000], 0, 1, 0, 1, vec![false]),
+        t9_1_2: (&[0b01000101, 0b10000000], 0, 1, 0, 2, vec![false, true]),
+        t9_1_3: (&[0b01000101, 0b10000000], 0, 1, 0, 3, vec![false, true, false]),
+        t9_1_4: (&[0b01000101, 0b10000000], 0, 1, 0, 4, vec![false, true, false, false]),
+        t9_1_5: (&[0b01000101, 0b10000000], 0, 1, 0, 5, vec![false, true, false, false, false]),
+        t9_1_6: (&[0b01000101, 0b10000000], 0, 1, 0, 6, vec![false, true, false, false, false, true]),
+        t9_1_7: (&[0b01000101, 0b10000000], 0, 1, 0, 7, vec![false, true, false, false, false, true, false]),
+        t9_1_8: (&[0b01000101, 0b10000000], 0, 1, 0, 8, vec![false, true, false, false, false, true, false, true]),
+        t9_1_9: (&[0b01000101, 0b10000000], 0, 1, 0, 9, vec![false, true, false, false, false, true, false, true, true]),
+        t9_1_10: (&[0b01000101, 0b10000000], 1, 2, 0, 9, vec![true, false, false, false, true, false, true, true, false]),
 
-        t9_2_1: ("01000101_0", 7, 1, vec![true]),
-        t9_2_2: ("01000101_0", 7, 2, vec![true, false]),
+        t9_2_1: (&[0b01000101, 0b10000000], 0, 1, 7, 1, vec![true]),
+        t9_2_2: (&[0b01000101, 0b10000000], 0, 1, 7, 2, vec![true, true]),
+        t9_2_3: (&[0b01000101, 0b10000000], 1, 2, 7, 2, vec![true, false]),
 
-        t9_3_1: ("01000101_0", 8, 1, vec![false]),
+        t9_3_1: (&[0b01000101, 0b10000000], 0, 1, 8, 1, vec![true]),
+        t9_3_2: (&[0b01000101, 0b10000000], 1, 2, 8, 1, vec![false]),
 
-        t13_1_1: ("10110010_01010", 9, 4, vec![true, false, true, false]),
+        t13_1_1: (&[0b10110010, 0b01010000], 0, 4, 9, 3, vec![true, false, true]),
+        t13_1_2: (&[0b10110010, 0b01010000], 1, 4, 9, 2, vec![false, true]),
+
+        t_bugfix1: (&[0b11111111, 0b00101001], 0, 1, 0, 1, vec![true]),
     }
 }
 
 #[cfg(test)]
-mod copy_sub_failure_tests {
-    use super::{BitString, RawBitVector};
+mod clone_sub_failure_tests {
+    use super::RawBitVector;
 
     macro_rules! parameterized_tests {
         ($($name:ident: $value:expr,)*) => {
@@ -659,39 +503,45 @@ mod copy_sub_failure_tests {
             #[test]
             #[should_panic]
             fn $name() {
-                let (s, i, size) = $value;
-                let rbv = RawBitVector::from(BitString::new(s));
-                let _ = rbv.copy_sub(i, size);
+                let (byte_slice, first_byte_offset, last_byte_len, i, size) = $value;
+                let rbv = RawBitVector::new(byte_slice, first_byte_offset, last_byte_len);
+                let _ = rbv.clone_sub(i, size);
             }
         )*
         }
     }
 
     parameterized_tests! {
-        t1_1: ("0", 0, 0),
-        t1_2: ("0", 0, 2),
-        t1_3: ("0", 1, 1),
+        t1_1: (&[0b00000000], 0, 1, 0, 0),
+        t1_2: (&[0b00000000], 0, 1, 0, 2),
+        t1_3: (&[0b00000000], 0, 1, 1, 1),
+        t1_4: (&[0b00000000], 1, 1, 0, 2),
 
-        t8_1_1: ("01000101", 0, 0),
-        t8_1_2: ("01000101", 0, 9),
+        t8_1_1: (&[0b01000101], 0, 8, 0, 0),
+        t8_1_2: (&[0b01000101], 0, 8, 0, 9),
+        t8_1_3: (&[0b01000101, 0b00000000], 1, 1, 0, 9),
 
-        t8_2_1: ("01000101", 7, 0),
-        t8_2_2: ("01000101", 7, 2),
+        t8_2_1: (&[0b01000101], 0, 8, 7, 0),
+        t8_2_2: (&[0b01000101], 0, 8, 7, 2),
+        t8_2_3: (&[0b01000101, 0b00000000], 1, 1, 7, 2),
 
-        t9_1_1: ("01000101_0", 0, 0),
-        t9_1_2: ("01000101_0", 0, 10),
+        t9_1_1: (&[0b01000101, 0b00000000], 0, 1, 0, 0),
+        t9_1_2: (&[0b01000101, 0b00000000], 0, 1, 0, 10),
+        t9_1_3: (&[0b01000101, 0b00000000], 1, 2, 0, 10),
 
-        t9_2_1: ("01000101_0", 7, 0),
-        t9_2_2: ("01000101_0", 7, 3),
+        t9_2_1: (&[0b01000101, 0b00000000], 0, 1, 7, 0),
+        t9_2_2: (&[0b01000101, 0b00000000], 0, 1, 7, 3),
+        t9_2_3: (&[0b01000101, 0b00000000], 1, 2, 7, 3),
 
-        t9_3_1: ("01000101_0", 8, 0),
-        t9_3_2: ("01000101_0", 8, 2),
+        t9_3_1: (&[0b01000101, 0b00000000], 0, 1, 8, 0),
+        t9_3_2: (&[0b01000101, 0b00000000], 0, 1, 8, 2),
+        t9_3_3: (&[0b01000101, 0b00000000], 1, 2, 8, 2),
     }
 }
 
 #[cfg(test)]
-mod copy_sub_fuzzing_tests {
-    use super::{BitString, RawBitVector};
+mod clone_sub_fuzzing_tests {
+    use super::RawBitVector;
 
     #[test]
     fn test() {
@@ -702,23 +552,47 @@ mod copy_sub_fuzzing_tests {
             ss
         }
 
+        fn str_into_byte_vec(s: &str) -> (Vec<u8>, u8) {
+            let bits: Vec<bool> = s.as_bytes().iter().map(|c| *c == '1' as u8).collect();
+
+            let mut byte_vec: Vec<u8> = Vec::with_capacity(bits.len() / 8 + 1);
+            let mut last_byte_len = 0u8;
+
+            for bits8 in bits.chunks(8) {
+                last_byte_len = bits8.len() as u8; // although this bits8 might not be a last byte.
+
+                let byte = (0..last_byte_len).fold(0, |byte, i| {
+                    byte + if bits8[i as usize] { 1 << (7 - i) } else { 0 }
+                });
+                byte_vec.push(byte);
+            }
+
+            (byte_vec, last_byte_len)
+        }
+
         for _ in 0..samples {
             let s = &format!("{:b}", rand::random::<u16>());
-            let bs = BitString::new(s);
-            let rbv = RawBitVector::from(bs);
+            let (byte_vec, last_byte_len) = str_into_byte_vec(s);
+            let rbv = RawBitVector::new(&byte_vec[..], 0, last_byte_len);
+            // TODO more tests (first_byte_offset > 0)
 
             for i in 0..s.len() {
                 for size in 1..(s.len() - i) {
-                    let copied_rbv = rbv.copy_sub(i as u64, size as u64);
+                    let copied_rbv = rbv.clone_sub(i as u64, size as u64);
 
                     let substr = sub_str(s, i as u64, size as u64);
-                    let substr_bs = BitString::new(&substr);
-                    let substr_rbv = RawBitVector::from(substr_bs);
+                    let (substr_byte_vec, substr_last_byte_len) = str_into_byte_vec(&substr);
+                    let substr_rbv =
+                        RawBitVector::new(&substr_byte_vec[..], 0, substr_last_byte_len);
 
-                    assert_eq!(copied_rbv, substr_rbv,
-                        "\nbit vector = {}, RawBitVector::copy_sub(i={}, size={});\nActual:   {}\nExpected: {}",
-                        s, i, size, copied_rbv, substr
-                    );
+                    assert_eq!(copied_rbv.len(), substr_rbv.len());
+                    for i in 0..copied_rbv.len() {
+                        assert_eq!(
+                            copied_rbv.access(i), substr_rbv.access(i),
+                            "\nbit vector = {}, RawBitVector::clone_sub(i={}, size={});\nActual:   {}\nExpected: {}",
+                            s, i, size, copied_rbv, substr
+                        )
+                    }
                 }
             }
         }
@@ -727,15 +601,15 @@ mod copy_sub_fuzzing_tests {
 
 #[cfg(test)]
 mod as_u32_success_tests {
-    use super::{BitString, RawBitVector};
+    use super::RawBitVector;
 
     macro_rules! parameterized_tests {
         ($($name:ident: $value:expr,)*) => {
         $(
             #[test]
             fn $name() {
-                let (s, expected_u32) = $value;
-                let rbv = RawBitVector::from(BitString::new(s));
+                let (byte_slice, first_byte_offset, last_byte_len, expected_u32) = $value;
+                let rbv = RawBitVector::new(byte_slice, first_byte_offset, last_byte_len);
                 assert_eq!(rbv.as_u32(), expected_u32);
             }
         )*
@@ -743,26 +617,28 @@ mod as_u32_success_tests {
     }
 
     parameterized_tests! {
-        t1_1: ("0", 0b00000000_00000000_00000000_00000000),
-        t1_2: ("1", 0b10000000_00000000_00000000_00000000),
+        t1_1: (&[0b11111111], 0, 1, 0b10000000_00000000_00000000_00000000),
+        t1_2: (&[0b11111111], 0, 7, 0b11111110_00000000_00000000_00000000),
+        t1_3: (&[0b11111111], 1, 2, 0b10000000_00000000_00000000_00000000),
+        t1_4: (&[0b11111111], 1, 7, 0b11111100_00000000_00000000_00000000),
 
-        t8_1: ("10010000", 0b10010000_00000000_00000000_00000000),
+        t8_1: (&[0b10010000], 0, 8, 0b10010000_00000000_00000000_00000000),
 
-        t31_1: ("10010000_01000001_00001000_0001101", 0b10010000_01000001_00001000_00011010),
-
-        t32_1: ("10010000_01000001_00001000_00011010", 0b10010000_01000001_00001000_00011010),
+        t32_1: (&[0b10010000, 0b01000001, 0b00001000, 0b00011010], 0, 7, 0b10010000_01000001_00001000_00011010),
+        t32_2: (&[0b10010000, 0b01000001, 0b00001000, 0b00011010], 0, 8, 0b10010000_01000001_00001000_00011010),
     }
 }
 
 #[cfg(test)]
 mod as_u32_failure_tests {
-    use super::{BitString, RawBitVector};
+    use super::RawBitVector;
 
     #[test]
     #[should_panic]
     fn test() {
-        let s = "00000000_11111111_00000000_11111111_0";
-        let rbv = RawBitVector::from(BitString::new(s));
+        let byte_slice = &[0b00000000, 0b11111111, 0b00000000, 0b11111111, 0b00000000];
+        let rbv = RawBitVector::new(byte_slice, 0, 33);
+        // TODO more tests (first_byte_offset > 0)
         let _ = rbv.as_u32();
     }
 }
