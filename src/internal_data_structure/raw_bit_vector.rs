@@ -27,10 +27,12 @@ impl<'s> RawBitVector<'s> {
     /// - `byte_slice` is empty.
     /// - _`first_byte_offset` >= 8_.
     /// - _`last_byte_len` == 0 || `last_byte_len` > 8_.
+    /// - _`byte_slice.len() == 1 && first_byte_offset >= last_byte_len`_
     pub fn new(byte_slice: &'s [u8], first_byte_offset: u8, last_byte_len: u8) -> Self {
         assert!(!byte_slice.is_empty());
         assert!(first_byte_offset < 8);
         assert!(0 < last_byte_len && last_byte_len <= 8);
+        assert!(!(byte_slice.len() == 1 && first_byte_offset >= last_byte_len));
         Self {
             byte_slice,
             first_byte_offset,
@@ -284,6 +286,8 @@ mod new_failure_tests {
         t_last_len_9: (&[0b00000000, 0b00000000], 0, 9),
 
         t_1byte_1: (&[0b00000000], 0, 9),
+
+        t_1byte_off7: (&[0b00000001], 7, 7),
     }
 }
 
