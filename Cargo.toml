@@ -25,8 +25,6 @@ harness = false
 [package.metadata.release]
 tag-prefix = "v"
 pre-release-replacements = [
-    {file="README.md", search="(?!semver\\.org/spec/)v[0-9\\.-]+", replace="v{{version}}"} ,
-    {file="src/lib.rs", search="(?!semver\\.org/spec/)v[0-9\\.-]+", replace="v{{version}}"},
     {file="CHANGELOG.md", search="Unreleased", replace="{{version}}"},
     {file="CHANGELOG.md", search="ReleaseDate", replace="{{date}}"},
 ]
