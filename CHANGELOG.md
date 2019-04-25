@@ -9,4 +9,5 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [v0.1.0] - 2019-04-25
 Initial release.
 
+[Unreleased]: https://github.com/laysakura/succinct.rs/compare/v0.1.0...HEAD
 [v0.1.0]: https://github.com/laysakura/fid-rs/compare/48fe478...v0.1.0
