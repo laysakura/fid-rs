@@ -1,5 +1,4 @@
 use super::{Blocks, Chunks, Fid};
-use crate::internal_data_structure::bit_string::BitString;
 use crate::internal_data_structure::popcount_table::PopcountTable;
 use crate::internal_data_structure::raw_bit_vector::RawBitVector;
 use std::ops::Index;
@@ -27,12 +26,15 @@ impl From<&str> for Fid {
     /// - `s` contains any character other than '0', '1', and '_'.
     /// - `s` does not contain any '0' or '1'
     fn from(s: &str) -> Self {
-        let bs = BitString::new(s);
-        let bits: Vec<bool> = bs
-            .str()
+        let bits: Vec<bool> = s
             .as_bytes()
             .iter()
-            .map(|c| *c == '1' as u8)
+            .filter_map(|c| match c {
+                48 /* '0' */ => Some(false),
+                49 /* '1' */ => Some(true),
+                95 /* '_' */ => None,
+                _ => panic!("`s` must consist of '0' or '1'. '{}' included.", c),
+            })
             .collect();
         Self::from(&bits[..])
     }
