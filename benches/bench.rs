@@ -161,10 +161,10 @@ mod fid {
 criterion_group!(
     benches,
     fid::from_str_benchmark,
-    fid::from_slice_benchmark,
-    fid::rank_benchmark,
-    fid::select_benchmark,
-    fid::rank0_benchmark,
-    fid::select0_benchmark,
+    // fid::from_slice_benchmark,
+    // fid::rank_benchmark,
+    // fid::select_benchmark,
+    // fid::rank0_benchmark,
+    // fid::select0_benchmark,
 );
 criterion_main!(benches);
