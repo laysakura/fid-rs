@@ -21,3 +21,11 @@ rand = "0.6"
 [[bench]]
 name = "bench"
 harness = false
+
+[package.metadata.release]
+tag-prefix = "v"
+pre-release-replacements = [
+    {file="README.md", search="v[a-z0-9\\.-]+", replace="v{{version}}"} ,
+    {file="src/lib.rs", search="v[a-z0-9\\.-]+", replace="v{{version}}"} ,
+]
+disable-publish = true
