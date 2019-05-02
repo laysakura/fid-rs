@@ -12,6 +12,6 @@ Just fixed docs.rs URL.
 ## [v0.1.0] - 2019-04-25
 Initial release.
 
-[Unreleased]: https://github.com/laysakura/succinct.rs/compare/v0.1.1...HEAD
-[v0.1.1]: https://github.com/laysakura/succinct.rs/compare/v0.1.0...v0.1.1
+[Unreleased]: https://github.com/laysakura/fid-rs/compare/v0.1.1...HEAD
+[v0.1.1]: https://github.com/laysakura/fid-rs/compare/v0.1.0...v0.1.1
 [v0.1.0]: https://github.com/laysakura/fid-rs/compare/48fe478...v0.1.0
