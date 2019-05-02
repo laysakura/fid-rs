@@ -9,7 +9,8 @@
 //! [Changelog](https://github.com/laysakura/fid-rs/blob/master/CHANGELOG.md)
 //!
 //! [![Build Status](https://travis-ci.com/laysakura/fid-rs.svg?branch=master)](https://travis-ci.com/laysakura/fid-rs)
-//! [![Crates.io](https://img.shields.io/crates/v/fid-rs.svg)](https://crates.io/crates/fid-rs)
+//! [![Crates.io Version](https://img.shields.io/crates/v/fid-rs.svg)](https://crates.io/crates/fid-rs)
+//! [![Crates.io Downloads](https://img.shields.io/crates/d/fid-rs.svg)](https://crates.io/crates/fid-rs)
 //! [![Minimum rustc version](https://img.shields.io/badge/rustc-1.33+-lightgray.svg)](https://github.com/laysakura/fid-rs#rust-version-supports)
 //! [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/laysakura/fid-rs/blob/master/LICENSE-MIT)
 //! [![License: Apache 2.0](https://img.shields.io/badge/license-Apache_2.0-blue.svg)](https://github.com/laysakura/fid-rs/blob/master/LICENSE-APACHE)
