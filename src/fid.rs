@@ -48,7 +48,7 @@ use super::internal_data_structure::popcount_table::PopcountTable;
 ///
 /// ```text
 /// Bit vector; 00001000 01000001 00000100 11000000 00100000 00000101 [1]0100000 00010000 001  ; (N=67)
-/// Chunk;     |                  7                    |                12                  |  ; (size = (log N)^2 = 36)
+/// Chunk;     |                  7                    |                13                  |  ; (size = (log N)^2 = 36)
 /// Block;     |0 |1 |1  |2 |2 |3  |3 |4 |6  |6 |6  |7 |0 |0  |0 |2 |4    |4 |4  |5 |5 |5  |6| ; (size = (log N) / 2 = 3)
 /// ```
 ///
