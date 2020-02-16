@@ -1,0 +1,15 @@
+var ALIASES = {};
+ALIASES["cfg_if"] = {};
+ALIASES["crossbeam_deque"] = {};
+ALIASES["crossbeam_epoch"] = {};
+ALIASES["crossbeam_queue"] = {};
+ALIASES["crossbeam_utils"] = {};
+ALIASES["either"] = {};
+ALIASES["fid_rs"] = {};
+ALIASES["lazy_static"] = {};
+ALIASES["libc"] = {};
+ALIASES["memoffset"] = {};
+ALIASES["num_cpus"] = {};
+ALIASES["rayon"] = {};
+ALIASES["rayon_core"] = {};
+ALIASES["scopeguard"] = {};
