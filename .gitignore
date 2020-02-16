@@ -2,5 +2,8 @@
 **/*.rs.bk
 Cargo.lock
 
+# local cargo settings
+/.cargo
+
 # used for debugging with VSCode
 src/main.rs
