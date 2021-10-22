@@ -79,13 +79,9 @@ impl<'s> RawBitVector<'s> {
 
     /// Returns length.
     pub fn len(&self) -> u64 {
-        if self.byte_slice.len() == 1 {
-            self.last_byte_len as u64 - self.first_byte_offset as u64
-        } else {
-            (self.byte_slice.len() as u64) * 8
-                - (self.first_byte_offset as u64)
-                - (8 - self.last_byte_len as u64)
-        }
+        (self.byte_slice.len() as u64) * 8
+            - (self.first_byte_offset as u64)
+            - (8 - self.last_byte_len as u64)
     }
 
     /// Returns popcount of whole this bit vector.
@@ -109,7 +105,7 @@ impl<'s> RawBitVector<'s> {
         };
         popcnt -= left_1s_byte.count_ones() as u64;
 
-        // remove 1s in the left of last_byte_len
+        // remove 1s in the right of last_byte_len
         let last_byte = self.byte_slice.last().unwrap();
         let last_offset = self.last_byte_len - 1;
         let right_1s_byte = match last_offset {

@@ -36,14 +36,14 @@
 //! assert_eq!(fid[1], true);   // 0[1]001; 1st bit is '1' (true)
 //! assert_eq!(fid[4], true);   // 0100[1]; 4th bit is '1' (true)
 //!
-//! assert_eq!(fid.rank(0), 0);  // [0]1001; Range [0, 0] has no '1'
-//! assert_eq!(fid.rank(3), 1);  // [0100]1; Range [0, 3] has 1 '1'
-//! assert_eq!(fid.rank(4), 2);  // [01001]; Range [0, 4] has 2 '1's
+//! assert_eq!(fid.rank1(0), 0);  // [0]1001; Range [0, 0] has no '1'
+//! assert_eq!(fid.rank1(3), 1);  // [0100]1; Range [0, 3] has 1 '1'
+//! assert_eq!(fid.rank1(4), 2);  // [01001]; Range [0, 4] has 2 '1's
 //!
-//! assert_eq!(fid.select(0), Some(0)); // []01001; Minimum i where range [0, i] has 0 '1's is i=0
-//! assert_eq!(fid.select(1), Some(1)); // 0[1]001; Minimum i where range [0, i] has 1 '1's is i=1
-//! assert_eq!(fid.select(2), Some(4)); // 0100[1]; Minimum i where range [0, i] has 2 '1's is i=4
-//! assert_eq!(fid.select(3), None);    // There is no i where range [0, i] has 3 '1's
+//! assert_eq!(fid.select1(0), Some(0)); // []01001; Minimum i where range [0, i] has 0 '1's is i=0
+//! assert_eq!(fid.select1(1), Some(1)); // 0[1]001; Minimum i where range [0, i] has 1 '1's is i=1
+//! assert_eq!(fid.select1(2), Some(4)); // 0100[1]; Minimum i where range [0, i] has 2 '1's is i=4
+//! assert_eq!(fid.select1(3), None);    // There is no i where range [0, i] has 3 '1's
 //!
 //! // rank0, select0 -----------------------
 //! assert_eq!(fid.rank0(0), 1);  // [0]1001; Range [0, 0] has no '0'

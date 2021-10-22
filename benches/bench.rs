@@ -72,7 +72,7 @@ mod fid {
                         // iter_batched() does not properly time `routine` time when `setup` time is far longer than `routine` time.
                         // Tested function takes too short compared to build(). So loop many times.
                         for _ in 0..times {
-                            assert_eq!(fid.rank(n - 1), 0);
+                            assert_eq!(fid.rank1(n - 1), 0);
                         }
                     },
                     BatchSize::SmallInput,
@@ -97,7 +97,7 @@ mod fid {
                         // iter_batched() does not properly time `routine` time when `setup` time is far longer than `routine` time.
                         // Tested function takes too short compared to build(). So loop many times.
                         for _ in 0..times {
-                            assert_eq!(fid.select(n - 1), Some(n - 2));
+                            assert_eq!(fid.select1(n - 1), Some(n - 2));
                         }
                     },
                     BatchSize::SmallInput,

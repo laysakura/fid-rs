@@ -91,24 +91,24 @@ fn fuzzing_test() {
 
             eprintln!("rank(): bit vec = \"{}\", i = {}, ", s, i);
             assert_eq!(
-                fid.rank(i as u64),
+                fid.rank1(i as u64),
                 rank_from_bit_string(s, i as u64),
                 "bit vec = \"{}\", i={}, Fid::rank()={}, rank_from_bit_string={}",
                 s,
                 i,
-                fid.rank(i as u64),
+                fid.rank1(i as u64),
                 rank_from_bit_string(s, i as u64)
             );
 
             let num = i as u64;
             eprintln!("select(): bit vec = \"{}\", num = {}, ", s, num);
             assert_eq!(
-                fid.select(num),
+                fid.select1(num),
                 select_from_bit_string(s, num),
                 "bit vec = \"{}\", num={}, Fid::select()={:?}, select_from_bit_string={:?}",
                 s,
                 num,
-                fid.select(num),
+                fid.select1(num),
                 select_from_bit_string(s, num)
             );
 

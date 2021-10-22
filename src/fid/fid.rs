@@ -111,6 +111,21 @@ impl Fid {
         }
     }
 
+    /// Returns the number of _0_ or _1_ in _[0, `i`]_ elements of the `Fid`.
+    /// If count_bool == false, the function counts the number of _0_
+    /// else it returns the number of _1_
+    ///
+    /// # Panics
+    /// When _`i` >= length of the `Fid`_.
+    ///
+    pub fn rank(&self, count_bool: bool, i: u64) -> u64 {
+        if count_bool {
+            self.rank1(i)
+        } else {
+            self.rank0(i)
+        }
+    }
+
     /// Returns the number of _1_ in _[0, `i`]_ elements of the `Fid`.
     ///
     /// # Panics
@@ -141,7 +156,7 @@ impl Fid {
     /// 7. Get _rank from block_left_ if `block_left` exists.
     /// 8. Get inner-block data _`block_bits`. `block_bits` must be of _block size_ length, fulfilled with _0_ in right bits.
     /// 9. Calculate _rank of `block_bits`_ in _O(1)_ using a table memonizing _block size_ bit's popcount.
-    pub fn rank(&self, i: u64) -> u64 {
+    pub fn rank1(&self, i: u64) -> u64 {
         let n = self.len();
         assert!(i < n);
         let chunk_size = Chunks::calc_chunk_size(n);
@@ -195,24 +210,27 @@ impl Fid {
     /// # Panics
     /// When _`i` >= length of the `Fid`_.
     pub fn rank0(&self, i: u64) -> u64 {
-        (i + 1) - self.rank(i)
+        (i + 1) - self.rank1(i)
     }
 
-    /// Returns the minimum position (0-origin) `i` where _`rank(i)` == num_ of `num`-th _1_ if exists. Else returns None.
+    /// Returns the minimum position (0-origin) `i` where _`rank(i)` == num_
+    /// of `num`-th _0_ or _1_ if exists. Else returns None.
+    /// If count_bool == false, the function counts the number of _0_
+    /// else it returns the number of _1_
     ///
     /// # Panics
     /// When _`num` > length of the `Fid`_.
     ///
     /// # Implementation detail
     /// Binary search using `rank()`.
-    pub fn select(&self, num: u64) -> Option<u64> {
+    pub fn select(&self, count_bool: bool, num: u64) -> Option<u64> {
         let n = self.len();
         assert!(num <= n);
 
-        if num == 0 || num == 1 && self[0] == true {
+        if num == 0 || num == 1 && self[0] == count_bool {
             return Some(0);
         }
-        if self.rank(n - 1) < num {
+        if self.rank(count_bool, n - 1) < num {
             return None;
         };
 
@@ -220,13 +238,21 @@ impl Fid {
         let mut ok = n - 1;
         while ok - ng > 1 {
             let mid = (ok + ng) / 2;
-            if self.rank(mid) >= num {
+            if self.rank(count_bool, mid) >= num {
                 ok = mid;
             } else {
                 ng = mid;
             }
         }
         Some(ok)
+    }
+
+    /// Returns the minimum position (0-origin) `i` where _`rank(i)` == num_ of `num`-th _1_ if exists. Else returns None.
+    ///
+    /// # Panics
+    /// When _`num` > length of the `Fid`_.
+    pub fn select1(&self, num: u64) -> Option<u64> {
+        self.select(true, num)
     }
 
     /// Returns the minimum position (0-origin) `i` where _`rank(i)` == num_ of `num`-th _0_ if exists. Else returns None.
@@ -234,27 +260,7 @@ impl Fid {
     /// # Panics
     /// When _`num` > length of the `Fid`_.
     pub fn select0(&self, num: u64) -> Option<u64> {
-        let n = self.bit_len;
-        assert!(num <= n);
-
-        if num == 0 || num == 1 && self[0] == false {
-            return Some(0);
-        }
-        if self.rank0(n - 1) < num {
-            return None;
-        };
-
-        let mut ng = 0;
-        let mut ok = n - 1;
-        while ok - ng > 1 {
-            let mid = (ok + ng) / 2;
-            if self.rank0(mid) >= num {
-                ok = mid;
-            } else {
-                ng = mid;
-            }
-        }
-        Some(ok)
+        self.select(false, num)
     }
 
     /// Returns bit length of this FID.
@@ -395,7 +401,7 @@ mod rank_success_tests {
             fn $name() {
                 let (in_fid_str, in_i, expected_rank) = $value;
                 assert_eq!(
-                    Fid::from(in_fid_str).rank(in_i),
+                    Fid::from(in_fid_str).rank1(in_i),
                     expected_rank
                 );
             }
@@ -452,7 +458,7 @@ mod rank_failure_tests {
     #[should_panic]
     fn rank_over_upper_bound() {
         let fid = Fid::from("00");
-        let _ = fid.rank(2);
+        let _ = fid.rank1(2);
     }
 }
 
@@ -525,7 +531,7 @@ mod select_failure_tests {
     #[should_panic]
     fn select_over_max_rank() {
         let fid = Fid::from("00");
-        let _ = fid.select(3);
+        let _ = fid.select1(3);
     }
 }
 

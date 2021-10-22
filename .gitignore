@@ -7,3 +7,4 @@ Cargo.lock
 
 # used for debugging with VSCode
 src/main.rs
+.vscode/launch.json

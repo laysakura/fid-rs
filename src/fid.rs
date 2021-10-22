@@ -129,8 +129,6 @@ struct Chunks {
 struct Chunk {
     value: u64, // popcount
     blocks: Blocks,
-
-    #[allow(dead_code)]
     length: u16,
 }
 
