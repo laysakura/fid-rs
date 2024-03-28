@@ -1,4 +1,5 @@
 /// Cache table of `popcount` results.
+#[derive(Clone)]
 pub struct PopcountTable {
     bit_length: u8,
 
