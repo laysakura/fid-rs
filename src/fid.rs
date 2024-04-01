@@ -97,7 +97,7 @@ use serde::{Deserialize, Serialize};
 /// In summary:
 ///
 ///   _rank() = (value of left chunk) + (value of left block) + (value of table keyed by inner block bits)_.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Fid {
     /// Raw data.
@@ -122,7 +122,7 @@ pub struct FidIter<'iter> {
 }
 
 /// Collection of Chunk.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 struct Chunks {
     chunks: Vec<Chunk>,
@@ -132,7 +132,7 @@ struct Chunks {
 /// Total popcount of _[0, <u>last bit of the chunk</u>]_ of a bit vector.
 ///
 /// Each chunk takes _2^64_ at max (when every bit is '1' for Fid of length of _2^64_).
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 struct Chunk {
     value: u64, // popcount
@@ -140,7 +140,7 @@ struct Chunk {
 }
 
 /// Collection of Block in a Chunk.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 struct Blocks {
     blocks: Vec<Block>,
@@ -150,7 +150,7 @@ struct Blocks {
 /// Total popcount of _[_first bit of the chunk which the block belongs to_, _last bit of the block_]_ of a bit vector.
 ///
 /// Each block takes (log 2^64)^2 = 64^2 = 2^16 at max (when every bit in a chunk is 1 for Fid of length of 2^64)
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 struct Block {
     value: u16, // popcount

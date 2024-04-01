@@ -2,7 +2,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Cache table of `popcount` results.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PopcountTable {
     bit_length: u8,
