@@ -10,7 +10,8 @@ High performance FID (Fully Indexable Dictionary) library.
 |
 [Changelog](https://github.com/laysakura/fid-rs/blob/master/CHANGELOG.md)
 
-[![Build Status](https://travis-ci.com/laysakura/fid-rs.svg?branch=master)](https://travis-ci.com/laysakura/fid-rs)
+[![GitHub Actions Status](https://github.com/laysakura/fid-rs/actions/workflows/clippy.yml/badge.svg)](https://github.com/laysakura/fid-rs/actions)
+[![Travis Status](https://travis-ci.com/laysakura/fid-rs.svg?branch=master)](https://travis-ci.com/laysakura/fid-rs)
 [![Crates.io Version](https://img.shields.io/crates/v/fid-rs.svg)](https://crates.io/crates/fid-rs)
 [![Crates.io Downloads](https://img.shields.io/crates/d/fid-rs.svg)](https://crates.io/crates/fid-rs)
 [![Minimum rustc version](https://img.shields.io/badge/rustc-1.33+-lightgray.svg)](https://github.com/laysakura/fid-rs#rust-version-supports)
