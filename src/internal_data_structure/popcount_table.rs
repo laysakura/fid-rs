@@ -1,9 +1,13 @@
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "mem_dbg")]
+use mem_dbg::{MemDbg, MemSize};
+
 /// Cache table of `popcount` results.
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "mem_dbg", derive(MemDbg, MemSize))]
 pub struct PopcountTable {
     bit_length: u8,
 

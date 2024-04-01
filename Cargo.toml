@@ -18,7 +18,7 @@ rayon = { version = "1.5", optional = true }
 # Serde is another optional feature, which can be enabled by setting `serde` feature.
 # It is used to serialize and deserialize the FID structure.
 serde = { version = "1.0", optional = true, features = ["derive"] }
-
+mem_dbg = {version = "0.1.4", optional = true}
 
 [dev-dependencies]
 criterion = "0.2"

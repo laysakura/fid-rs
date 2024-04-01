@@ -10,6 +10,9 @@ use super::internal_data_structure::popcount_table::PopcountTable;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "mem_dbg")]
+use mem_dbg::{MemDbg, MemSize};
+
 /// FID (Fully Indexable Dictionary).
 ///
 /// This class can handle bit sequence of virtually **arbitrary length.**
@@ -99,6 +102,7 @@ use serde::{Deserialize, Serialize};
 ///   _rank() = (value of left chunk) + (value of left block) + (value of table keyed by inner block bits)_.
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "mem_dbg", derive(MemDbg, MemSize))]
 pub struct Fid {
     /// Raw data.
     byte_vec: Vec<u8>,
@@ -124,6 +128,7 @@ pub struct FidIter<'iter> {
 /// Collection of Chunk.
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "mem_dbg", derive(MemDbg, MemSize))]
 struct Chunks {
     chunks: Vec<Chunk>,
     chunks_cnt: u64,
@@ -134,6 +139,7 @@ struct Chunks {
 /// Each chunk takes _2^64_ at max (when every bit is '1' for Fid of length of _2^64_).
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "mem_dbg", derive(MemDbg, MemSize))]
 struct Chunk {
     value: u64, // popcount
     blocks: Blocks,
@@ -142,6 +148,7 @@ struct Chunk {
 /// Collection of Block in a Chunk.
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "mem_dbg", derive(MemDbg, MemSize))]
 struct Blocks {
     blocks: Vec<Block>,
     blocks_cnt: u16,
@@ -152,6 +159,7 @@ struct Blocks {
 /// Each block takes (log 2^64)^2 = 64^2 = 2^16 at max (when every bit in a chunk is 1 for Fid of length of 2^64)
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "mem_dbg", derive(MemDbg, MemSize))]
 struct Block {
     value: u16, // popcount
     length: u8,
