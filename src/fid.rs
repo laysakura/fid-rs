@@ -2,7 +2,7 @@ mod block;
 mod blocks;
 mod chunk;
 mod chunks;
-mod fid;
+mod fid_impl;
 mod fid_iter;
 
 use super::internal_data_structure::popcount_table::PopcountTable;
