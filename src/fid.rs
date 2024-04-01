@@ -97,6 +97,7 @@ use serde::{Deserialize, Serialize};
 /// In summary:
 ///
 ///   _rank() = (value of left chunk) + (value of left block) + (value of table keyed by inner block bits)_.
+#[derive(Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Fid {
     /// Raw data.
@@ -121,6 +122,7 @@ pub struct FidIter<'iter> {
 }
 
 /// Collection of Chunk.
+#[derive(Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 struct Chunks {
     chunks: Vec<Chunk>,

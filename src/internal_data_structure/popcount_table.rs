@@ -2,6 +2,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Cache table of `popcount` results.
+#[derive(Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PopcountTable {
     bit_length: u8,
@@ -22,7 +23,7 @@ impl PopcountTable {
     /// When `bit_length` is out of [1, 64].
     pub fn new(bit_length: u8) -> PopcountTable {
         assert!(
-            1 <= bit_length && bit_length <= 64,
+            (1..=64).contains(&bit_length),
             "bit_length (= {}) must be in [1, 64]",
             bit_length
         );
