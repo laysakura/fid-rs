@@ -367,7 +367,7 @@ mod from_slice_failure_tests {
     #[test]
     #[should_panic]
     fn empty() {
-        Fid::from(&[][..]);
+        let _ = Fid::from(&[][..]);
     }
 }
 
