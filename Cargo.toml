@@ -1,6 +1,6 @@
 [package]
 name = "fid-rs"
-version = "0.1.2-alpha.0"
+version = "0.2.0"
 authors = ["Sho Nakatani <lay.sakura@gmail.com>"]
 description = "High performance FID (Fully Indexable Dictionary) library"
 readme = "README.md"
