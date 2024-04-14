@@ -94,6 +94,7 @@ use super::internal_data_structure::popcount_table::PopcountTable;
 /// In summary:
 ///
 ///   _rank() = (value of left chunk) + (value of left block) + (value of table keyed by inner block bits)_.
+#[derive(Clone)]
 pub struct Fid {
     /// Raw data.
     byte_vec: Vec<u8>,
@@ -116,6 +117,7 @@ pub struct FidIter<'iter> {
     i: u64,
 }
 
+#[derive(Clone)]
 /// Collection of Chunk.
 struct Chunks {
     chunks: Vec<Chunk>,
