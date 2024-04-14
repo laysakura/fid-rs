@@ -209,7 +209,7 @@ impl Fid {
         let n = self.len();
         assert!(num <= n);
 
-        if num == 0 || num == 1 && self[0] == true {
+        if num == 0 || num == 1 && self[0] {
             return Some(0);
         }
         if self.rank(n - 1) < num {
@@ -237,7 +237,7 @@ impl Fid {
         let n = self.bit_len;
         assert!(num <= n);
 
-        if num == 0 || num == 1 && self[0] == false {
+        if num == 0 || num == 1 && !self[0] {
             return Some(0);
         }
         if self.rank0(n - 1) < num {
@@ -260,6 +260,11 @@ impl Fid {
     /// Returns bit length of this FID.
     pub fn len(&self) -> u64 {
         self.bit_len
+    }
+
+    /// Returns whether the FID is empty.
+    pub fn is_empty(&self) -> bool {
+        self.bit_len == 0
     }
 
     fn rbv(&self) -> RawBitVector {
@@ -362,7 +367,7 @@ mod from_slice_failure_tests {
     #[test]
     #[should_panic]
     fn empty() {
-        Fid::from(&[][..]);
+        let _ = Fid::from(&[][..]);
     }
 }
 

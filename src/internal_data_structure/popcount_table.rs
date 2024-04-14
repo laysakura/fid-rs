@@ -1,5 +1,13 @@
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+#[cfg(feature = "mem_dbg")]
+use mem_dbg::{MemDbg, MemSize};
+
 /// Cache table of `popcount` results.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "mem_dbg", derive(MemDbg, MemSize))]
 pub struct PopcountTable {
     bit_length: u8,
 
@@ -19,7 +27,7 @@ impl PopcountTable {
     /// When `bit_length` is out of [1, 64].
     pub fn new(bit_length: u8) -> PopcountTable {
         assert!(
-            1 <= bit_length && bit_length <= 64,
+            (1..=64).contains(&bit_length),
             "bit_length (= {}) must be in [1, 64]",
             bit_length
         );
