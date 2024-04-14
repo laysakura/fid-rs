@@ -125,6 +125,7 @@ pub struct FidIter<'iter> {
     i: u64,
 }
 
+#[derive(Clone)]
 /// Collection of Chunk.
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
