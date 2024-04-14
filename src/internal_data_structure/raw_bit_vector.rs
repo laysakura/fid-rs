@@ -97,7 +97,7 @@ impl<'s> RawBitVector<'s> {
 
         // remove 1s in the left of first_byte_offset
         let left_1s_byte = match self.first_byte_offset {
-            0 => 0b00000000 & self.byte_slice[0],
+            0 => 0,
             1 => 0b10000000 & self.byte_slice[0],
             2 => 0b11000000 & self.byte_slice[0],
             3 => 0b11100000 & self.byte_slice[0],
@@ -120,7 +120,7 @@ impl<'s> RawBitVector<'s> {
             4 => 0b00000111 & last_byte,
             5 => 0b00000011 & last_byte,
             6 => 0b00000001 & last_byte,
-            7 => 0b00000000 & last_byte,
+            7 => 0,
             _ => panic!("never happen"),
         };
         popcnt -= right_1s_byte.count_ones() as u64;

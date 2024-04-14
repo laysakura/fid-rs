@@ -7,7 +7,6 @@ impl super::Chunk {
         let blocks = Blocks::new(rbv, i_chunk, length);
         Chunk {
             value,
-            length,
             blocks,
         }
     }

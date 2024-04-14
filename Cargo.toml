@@ -12,7 +12,13 @@ categories = ["compression", "data-structures"]
 edition = "2018"
 
 [dependencies]
-rayon = "1.0"
+# Rayon is an optional feature, which is enabled by default.
+# It is used to crate the Chunks collection in parallel.
+rayon = { version = "1.5", optional = true }
+# Serde is another optional feature, which can be enabled by setting `serde` feature.
+# It is used to serialize and deserialize the FID structure.
+serde = { version = "1.0", optional = true, features = ["derive"] }
+mem_dbg = {version = "0.1.4", optional = true}
 
 [dev-dependencies]
 criterion = "0.2"
@@ -26,3 +32,6 @@ harness = false
 tag-prefix = "v"
 pre-release-hook = ["emacs", "CHANGELOG.md"]  # Finally, I found this hook so effective!!
 disable-publish = true
+
+[features]
+default = ["rayon"]
